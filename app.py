@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from Typing import List
 
 load_dotenv()
 
@@ -26,6 +27,8 @@ class Customer(Base):
     phone_number: Mapped[str] = mapped_column(nullable=False)
     address: Mapped[str] = mapped_column(nullable=False)
 
+    vehicles: Mapped[List['Vehicle']] = mapped_column(back_populates='customers')
+
 class Vehicle(Base):
     __tablename__ = 'vehicles'
 
@@ -37,6 +40,9 @@ class Vehicle(Base):
     year: Mapped[int] = mapped_column(nullable=False)
     mileage: Mapped[int] = mapped_column(nullable=False)
 
+    customer: Mapped['Customer'] = mapped_column(back_populates='vehicles')
+    service_tickets: Mapped[List['Service_Tickets']] = mapped_column(back_populates='vehicles')
+
 class Service_Tickets(Base):
     __tablename__ = 'service_tickets'
 
@@ -47,6 +53,8 @@ class Service_Tickets(Base):
     service_description: Mapped[str] = mapped_column(nullable=False)
     status: Mapped[str] = mapped_column(nullable=False)
     cost: Mapped[float] = mapped_column(nullable=False)
+
+    vehicle: Mapped['Vehicle'] = mapped_column(back_populates='service_tickets')
 
 class Mechanics(Base):
     __tablename__ = 'mechanics'
