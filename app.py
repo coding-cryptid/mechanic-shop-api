@@ -5,6 +5,9 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from typing import List
+from flask_sqlalchemy import SQLAlchemy
+from flask import Flask
+from flask_marshmallow import Marshmallow
 
 load_dotenv()
 
