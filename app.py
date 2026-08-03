@@ -22,9 +22,9 @@ class Customer(Base):
     __tablename__ = 'customers'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(nullable=False)
-    email: Mapped[str] = mapped_column(nullable=False, unique=True)
-    phone_number: Mapped[str] = mapped_column(nullable=False)
+    name: Mapped[str] = mapped_column(db.String(255), nullable=False)
+    email: Mapped[str] = mapped_column(db.String(255), nullable=False, unique=True)
+    phone_number: Mapped[str] = mapped_column(db.String(255), nullable=False)
 
     service_tickets: Mapped[List['Service_Tickets']] = relationship(back_populates='customer')
 
@@ -40,9 +40,9 @@ class Service_Tickets(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     customer_id: Mapped[int] = mapped_column(ForeignKey('customers.id'), nullable=False)
-    vin: Mapped[str] = mapped_column(nullable=False)
-    service_date: Mapped[str] = mapped_column(nullable=False)
-    service_description: Mapped[str] = mapped_column(nullable=False)
+    vin: Mapped[str] = mapped_column(db.String(255), nullable=False)
+    service_date: Mapped[str] = mapped_column(db.String(255), nullable=False)
+    service_description: Mapped[str] = mapped_column(db.String(255), nullable=False)
 
     customer: Mapped['Customer'] = relationship(back_populates='service_tickets')
     mechanics: Mapped[List['Mechanics']] = relationship(secondary=service_mechanics, back_populates='service_tickets')
@@ -51,10 +51,10 @@ class Mechanics(Base):
     __tablename__ = 'mechanics'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(nullable=False)
-    email: Mapped[str] = mapped_column(nullable=False, unique=True)
-    phone: Mapped[str] = mapped_column(nullable=False)
-    salary: Mapped[float] = mapped_column(nullable=False)
+    name: Mapped[str] = mapped_column(db.String(255), nullable=False)
+    email: Mapped[str] = mapped_column(db.String(255), nullable=False, unique=True)
+    phone: Mapped[str] = mapped_column(db.String(255), nullable=False)
+    salary: Mapped[float] = mapped_column(db.Float, nullable=False)
 
     service_tickets: Mapped[List['Service_Tickets']] = relationship(secondary=service_mechanics, back_populates='mechanics')
 
