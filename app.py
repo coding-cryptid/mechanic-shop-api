@@ -24,6 +24,13 @@ class Customer(Base):
 
     service_tickets: Mapped[List['Service_Tickets']] = mapped_column(back_populates='customer')
 
+service_mechanics = db.Table (
+    'service_mechanics',
+    Base.metadata,
+    db.Column('service_ticket_id', db.ForeignKey('service_tickets.id')),
+    db.Column('mechanic_id', db.ForeignKey('mechanics.id'))
+)
+
 class Service_Tickets(Base):
     __tablename__ = 'service_tickets'
 
@@ -34,6 +41,7 @@ class Service_Tickets(Base):
     service_description: Mapped[str] = mapped_column(nullable=False)
 
     customer: Mapped['Customer'] = mapped_column(back_populates='service_tickets')
+    mechanics: Mapped[List['Mechanics']] = mapped_column(secondary=service_mechanics, back_populates='service_tickets')
 
 class Mechanics(Base):
     __tablename__ = 'mechanics'
@@ -43,6 +51,8 @@ class Mechanics(Base):
     email: Mapped[str] = mapped_column(nullable=False, unique=True)
     phone: Mapped[str] = mapped_column(nullable=False)
     salary: Mapped[float] = mapped_column(nullable=False)
+
+    service_tickets: Mapped[List['Service_Tickets']] = mapped_column(secondary=service_mechanics, back_populates='mechanics')
 
 with app.app_context():
 			db.create_all()		
