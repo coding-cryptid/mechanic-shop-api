@@ -16,3 +16,16 @@ class Base(DeclarativeBase):
 db = SQLAlchemy(model_class = Base)
 db.init_app(app)
 
+class Customer(Base):
+    __tablename__ = 'customers'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    first_name: Mapped[str] = mapped_column(nullable=False)
+    last_name: Mapped[str] = mapped_column(nullable=False)
+    email: Mapped[str] = mapped_column(nullable=False, unique=True)
+    phone_number: Mapped[str] = mapped_column(nullable=False)
+    address: Mapped[str] = mapped_column(nullable=False)
+
+with app.app_context():
+			db.create_all()		
+app.run()
