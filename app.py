@@ -19,7 +19,9 @@ class Base(DeclarativeBase):
     pass
 
 db = SQLAlchemy(model_class=Base)
+ma = Marshmallow()
 db.init_app(app)
+ma.init_app(app)
 
 class Customer(Base):
     __tablename__ = 'customers'
