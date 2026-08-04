@@ -91,6 +91,7 @@ service_tickets_schema = ServiceTicketSchema(many=True)
 mechanic_schema = MechanicSchema()
 mechanics_schema = MechanicSchema(many=True)
 
+
 # CRUD ENDPOINTS
 
 # CUSTOMERS
