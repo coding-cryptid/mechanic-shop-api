@@ -14,7 +14,7 @@ def create_mechanic():
     new_mechanic = Mechanics(
         name=data['name'],
         email=data['email'],
-        phone=data['phone'],
+        phone_number=data['phone_number'],
         salary=data['salary']
     )
     db.session.add(new_mechanic)
@@ -42,7 +42,7 @@ def update_mechanic(id):
     data = request.get_json()
     mechanic.name = data['name']
     mechanic.email = data['email']
-    mechanic.phone = data['phone']
+    mechanic.phone_number = data['phone_number']
     mechanic.salary = data['salary']
     db.session.commit()
     return mechanic_schema.jsonify(mechanic), 200
