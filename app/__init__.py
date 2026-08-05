@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from flask import Flask
+from flask import Flask, __main__
 from flask_sqlalchemy import SQLAlchemy
 from .models import db
 from .extensions import ma
