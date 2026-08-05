@@ -1,6 +1,6 @@
 from .schemas import service_tickets_schema, service_tickets_schema
 from flask import request, jsonify
-from app.models import Service_Tickets, db
+from app.models import Service_Tickets, db, Mechanics
 from sqlalchemy import select
 from marshmallow import ValidationError
 from . import service_tickets_bp
@@ -46,6 +46,33 @@ def update_service_ticket(id):
     service_ticket.service_description = data['service_description']
     db.session.commit()
     return service_tickets_schema.jsonify(service_ticket), 200
+
+# Assign a mechanic to a ticket
+@service_tickets_bp.route('/<ticket_id>/assign-mechanic/<mechanic_id>', methods=['PUT'])
+def assign_mechanic(ticket_id, mechanic_id):
+    ticket = Service_Tickets.query.get_or_404(ticket_id)
+    mechanic = Mechanics.query.get_or_404(mechanic_id)
+    
+    if mechanic not in ticket.mechanics:
+        ticket.mechanics.append(mechanic)
+        db.session.commit()
+        return jsonify({'message': f'Mechanic {mechanic_id} assigned to ticket {ticket_id}'}), 200
+    
+    return jsonify({'message': 'Mechanic already assigned'}), 400
+
+
+# Remove a mechanic from a ticket
+@service_tickets_bp.route('/<ticket_id>/remove-mechanic/<mechanic_id>', methods=['PUT'])
+def remove_mechanic(ticket_id, mechanic_id):
+    ticket = Service_Tickets.query.get_or_404(ticket_id)
+    mechanic = Mechanics.query.get_or_404(mechanic_id)
+    
+    if mechanic in ticket.mechanics:
+        ticket.mechanics.remove(mechanic)
+        db.session.commit()
+        return jsonify({'message': f'Mechanic {mechanic_id} removed from ticket {ticket_id}'}), 200
+    
+    return jsonify({'message': 'Mechanic not assigned to this ticket'}), 400
 
 # DELETE /service_tickets/<id>
 @service_tickets_bp.route('/service_tickets/<int:id>', methods=['DELETE'])
