@@ -73,11 +73,3 @@ def remove_mechanic(ticket_id, mechanic_id):
         return jsonify({'message': f'Mechanic {mechanic_id} removed from ticket {ticket_id}'}), 200
     
     return jsonify({'message': 'Mechanic not assigned to this ticket'}), 400
-
-# DELETE /service_tickets/<id>
-@service_tickets_bp.route('/service_tickets/<int:id>', methods=['DELETE'])
-def delete_service_ticket(id):
-    service_ticket = Service_Tickets.query.get_or_404(id)
-    db.session.delete(service_ticket)
-    db.session.commit()
-    return '', 204
