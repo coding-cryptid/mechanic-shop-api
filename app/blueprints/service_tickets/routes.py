@@ -26,14 +26,16 @@ def create_service_ticket():
 @service_tickets_bp.route('/service_tickets', methods=['GET'])
 @cache.cached(timeout=60)
 def get_service_tickets():
-    service_tickets = Service_Tickets.query.all()
+    # service_tickets = Service_Tickets.query.all()
+    service_tickets = db.session.execute(db.select(Service_Tickets)).scalars().all()
     return service_tickets_schema.jsonify(service_tickets), 200
 
 # GET /service_tickets/<id>
 @service_tickets_bp.route('/service_tickets/<int:id>', methods=['GET'])
 @cache.cached(timeout=60)
 def get_service_ticket(id):
-    service_ticket = Service_Tickets.query.get_or_404(id)
+    # service_ticket = Service_Tickets.query.get_or_404(id)
+    service_ticket = db.session.execute(db.select(Service_Tickets).where(Service_Tickets.id == id)).scalar_one_or_none()
     return service_tickets_schema.jsonify(service_ticket), 200
 
 # PUT /service_tickets/<id>

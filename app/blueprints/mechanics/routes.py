@@ -28,14 +28,16 @@ def create_mechanic():
 @mechanics_bp.route('/mechanics', methods=['GET'])
 @cache.cached(timeout=60)
 def get_mechanics():
-    mechanics = Mechanics.query.all()
+    # mechanics = Mechanics.query.all()
+    mechanics = db.session.execute(db.select(Mechanics)).scalars().all()
     return mechanics_schema.jsonify(mechanics), 200
 
 # GET /mechanics/<id>
 @mechanics_bp.route('/mechanics/<int:id>', methods=['GET'])
 @cache.cached(timeout=60)
 def get_mechanic(id):
-    mechanic = Mechanics.query.get_or_404(id)
+    # mechanic = Mechanics.query.get_or_404(id)
+    mechanic = db.session.execute(db.select(Mechanics).where(Mechanics.id == id)).scalar_one_or_none()
     return mechanic_schema.jsonify(mechanic), 200
 
 # PUT /mechanics/<id>
