@@ -43,7 +43,8 @@ def get_service_ticket(id):
 def update_service_ticket(id):
     from flask import request, jsonify
 
-    service_ticket = Service_Tickets.query.get_or_404(id)
+    # service_ticket = Service_Tickets.query.get_or_404(id)
+    service_ticket = db.session.execute(db.select(Service_Tickets).where(Service_Tickets.id == id)).scalar_one_or_none()
     data = request.get_json()
     service_ticket.customer_id = data['customer_id']
     service_ticket.vin = data['vin']
@@ -55,9 +56,11 @@ def update_service_ticket(id):
 # Assign a mechanic to a ticket
 @service_tickets_bp.route('/<ticket_id>/assign-mechanic/<mechanic_id>', methods=['PUT'])
 def assign_mechanic(ticket_id, mechanic_id):
-    ticket = Service_Tickets.query.get_or_404(ticket_id)
-    mechanic = Mechanics.query.get_or_404(mechanic_id)
-    
+    # ticket = Service_Tickets.query.get_or_404(ticket_id)
+    ticket = db.session.execute(db.select(Service_Tickets).where(Service_Tickets.id == ticket_id)).scalar_one_or_none()
+    # mechanic = Mechanics.query.get_or_404(mechanic_id)
+    mechanic = db.session.execute(db.select(Mechanics).where(Mechanics.id == mechanic_id)).scalar_one_or_none()
+
     if mechanic not in ticket.mechanics:
         ticket.mechanics.append(mechanic)
         db.session.commit()
@@ -69,9 +72,11 @@ def assign_mechanic(ticket_id, mechanic_id):
 # Remove a mechanic from a ticket
 @service_tickets_bp.route('/<ticket_id>/remove-mechanic/<mechanic_id>', methods=['PUT'])
 def remove_mechanic(ticket_id, mechanic_id):
-    ticket = Service_Tickets.query.get_or_404(ticket_id)
-    mechanic = Mechanics.query.get_or_404(mechanic_id)
-    
+    # ticket = Service_Tickets.query.get_or_404(ticket_id)
+    ticket = db.session.execute(db.select(Service_Tickets).where(Service_Tickets.id == ticket_id)).scalar_one_or_none()
+    # mechanic = Mechanics.query.get_or_404(mechanic_id)
+    mechanic = db.session.execute(db.select(Mechanics).where(Mechanics.id == mechanic_id)).scalar_one_or_none()
+
     if mechanic in ticket.mechanics:
         ticket.mechanics.remove(mechanic)
         db.session.commit()

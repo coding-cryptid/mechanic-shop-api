@@ -43,7 +43,8 @@ def get_customer(id):
 def update_customer(id):
     from flask import request, jsonify
 
-    customer = Customer.query.get_or_404(id)
+    # customer = Customer.query.get_or_404(id)
+    customer = db.session.execute(db.select(Customer).where(Customer.id == id)).scalar_one_or_none()
     data = request.get_json()
     customer.name = data['name']
     customer.email = data['email']

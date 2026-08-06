@@ -45,7 +45,8 @@ def get_mechanic(id):
 def update_mechanic(id):
     from flask import request, jsonify
 
-    mechanic = Mechanics.query.get_or_404(id)
+    # mechanic = Mechanics.query.get_or_404(id)
+    mechanic = db.session.execute(db.select(Mechanics).where(Mechanics.id == id)).scalar_one_or_none()
     data = request.get_json()
     mechanic.name = data['name']
     mechanic.email = data['email']
