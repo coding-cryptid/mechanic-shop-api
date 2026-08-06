@@ -34,7 +34,8 @@ def get_customers():
 @customers_bp.route('/customers/<int:id>', methods=['GET'])
 @cache.cached(timeout=60)
 def get_customer(id):
-    customer = Customer.query.get_or_404(id)
+    # customer = Customer.query.get_or_404(id)
+    customer = db.session.execute(db.select(Customer).where(Customer.id == id)).scalar_one_or_none()
     return customer_schema.jsonify(customer), 200
 
 # PUT /customers/<id>
