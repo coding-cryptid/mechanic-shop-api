@@ -4,9 +4,11 @@ from app.models import Mechanics, db
 from sqlalchemy import select
 from marshmallow import ValidationError
 from . import mechanics_bp
+from app.extensions import limiter
 
 # POST /mechanics
 @mechanics_bp.route('/mechanics', methods=['POST'])
+@limiter.limit("3 per hour")
 def create_mechanic():
     from flask import request, jsonify
 
@@ -49,6 +51,7 @@ def update_mechanic(id):
 
 # DELETE /mechanics/<id>
 @mechanics_bp.route('/mechanics/<int:id>', methods=['DELETE'])
+@limiter.limit("3 per hour")
 def delete_mechanic(id):
     mechanic = Mechanics.query.get_or_404(id)
     db.session.delete(mechanic)
