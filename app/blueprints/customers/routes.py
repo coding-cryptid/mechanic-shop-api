@@ -1,5 +1,5 @@
 from .schemas import customer_schema, customers_schema
-from flask import request, jsonify
+from flask import request, jsonify, current_app
 from app.models import Customer, db
 from sqlalchemy import select
 from marshmallow import ValidationError
