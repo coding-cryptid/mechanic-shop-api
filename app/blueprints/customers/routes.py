@@ -26,7 +26,8 @@ def create_customer():
 @customers_bp.route('/customers', methods=['GET'])
 @cache.cached(timeout=60)
 def get_customers():
-    customers = Customer.query.all()
+    # customers = Customer.query.all()
+    customers = db.session.execute(db.select(Customer)).scalars().all()
     return customers_schema.jsonify(customers), 200
 
 # GET /customers/<id>
