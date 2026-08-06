@@ -1,3 +1,4 @@
+from app.utils.util import token_required
 from .schemas import mechanic_schema, mechanics_schema
 from flask import request, jsonify
 from app.models import Mechanics, db
@@ -53,6 +54,7 @@ def update_mechanic(id):
 
 # DELETE /mechanics/<id>
 @mechanics_bp.route('/mechanics/<int:id>', methods=['DELETE'])
+@token_required
 @limiter.limit("3 per hour")
 def delete_mechanic(id):
     mechanic = Mechanics.query.get_or_404(id)

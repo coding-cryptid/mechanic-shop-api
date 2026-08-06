@@ -5,9 +5,33 @@ from sqlalchemy import select
 from marshmallow import ValidationError
 from . import customers_bp
 from extensions import limiter, cache
+from app.utils.util import encode_token, token_required
 
 # POST /customers
 @customers_bp.route('/customers', methods=['POST'])
+def login():
+    try:
+        credentials = request.json
+        username = credentails['email']
+        password = credentials['password']
+    except KeyError:
+        return jsonify({'messages': 'Invalid payload, expecting username and password'}), 400
+    
+    query =select(User).where(User.email == email) 
+    user = db.session.execute(query).scalar_one_or_none()
+
+    if user and user.password == password:
+        auth_token = encode_token(user.id, user.role.role_name)
+
+        response = {
+            "status": "success",
+            "message": "Successfully Logged In",
+            "auth_token": auth_token
+        }
+        return jsonify(response), 200
+    else:
+        return jsonify({'messages': "Invalid email or password"}), 401
+
 def create_customer():
     from flask import request, jsonify
 
@@ -50,6 +74,7 @@ def update_customer(id):
 
 # DELETE /customers/<id>
 @customers_bp.route('/customers/<int:id>', methods=['DELETE'])
+@token_required
 def delete_customer(id):
     customer = Customer.query.get_or_404(id)
     db.session.delete(customer)
