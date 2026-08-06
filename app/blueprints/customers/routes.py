@@ -4,7 +4,7 @@ from app.models import Customer, db
 from sqlalchemy import select
 from marshmallow import ValidationError
 from . import customers_bp
-from extensions import limiter, cache
+from app.extensions import limiter, cache
 from app.utils.util import encode_token, token_required
 
 # POST /customers

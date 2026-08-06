@@ -4,7 +4,7 @@ from app.models import Service_Tickets, db, Mechanics
 from sqlalchemy import select
 from marshmallow import ValidationError
 from . import service_tickets_bp
-from extensions import limiter, cache
+from app.extensions import limiter, cache
 
 # POST /service_tickets
 @service_tickets_bp.route('/service_tickets', methods=['POST'])
