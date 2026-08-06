@@ -4,7 +4,7 @@ from app.models import Mechanics, db
 from sqlalchemy import select
 from marshmallow import ValidationError
 from . import mechanics_bp
-from app.extensions import limiter
+from app.extensions import limiter, cache
 
 # POST /mechanics
 @mechanics_bp.route('/mechanics', methods=['POST'])
@@ -25,12 +25,14 @@ def create_mechanic():
 
 # GET /mechanics
 @mechanics_bp.route('/mechanics', methods=['GET'])
+@cache.cached(timeout=60)
 def get_mechanics():
     mechanics = Mechanics.query.all()
     return mechanics_schema.jsonify(mechanics), 200
 
 # GET /mechanics/<id>
 @mechanics_bp.route('/mechanics/<int:id>', methods=['GET'])
+@cache.cached(timeout=60)
 def get_mechanic(id):
     mechanic = Mechanics.query.get_or_404(id)
     return mechanic_schema.jsonify(mechanic), 200

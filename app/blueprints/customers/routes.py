@@ -4,6 +4,7 @@ from app.models import Customer, db
 from sqlalchemy import select
 from marshmallow import ValidationError
 from . import customers_bp
+from extensions import limiter, cache
 
 # POST /customers
 @customers_bp.route('/customers', methods=['POST'])
@@ -22,12 +23,14 @@ def create_customer():
 
 # GET /customers
 @customers_bp.route('/customers', methods=['GET'])
+@cache.cached(timeout=60)
 def get_customers():
     customers = Customer.query.all()
     return customers_schema.jsonify(customers), 200
 
 # GET /customers/<id>
 @customers_bp.route('/customers/<int:id>', methods=['GET'])
+@cache.cached(timeout=60)
 def get_customer(id):
     customer = Customer.query.get_or_404(id)
     return customer_schema.jsonify(customer), 200

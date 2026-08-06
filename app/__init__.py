@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from flask import Flask, __main__
 from flask_sqlalchemy import SQLAlchemy
 from .models import db
-from .extensions import ma, limiter
+from .extensions import ma, limiter, cache
 from .blueprints.customers import customers_bp
 from .blueprints.service_tickets import service_tickets_bp
 from .blueprints.mechanics import mechanics_bp
@@ -18,7 +18,8 @@ def create_app(config_name='DevelopmentConfig'):
     db.init_app(app)
     ma.init_app(app)
     limiter.init_app(app)
-    
+    cache.init_app(app)
+
     app.register_blueprint(customers_bp, url_prefix='/customers')
     app.register_blueprint(service_tickets_bp, url_prefix='/service_tickets')
     app.register_blueprint(mechanics_bp, url_prefix='/mechanics')

@@ -4,6 +4,7 @@ from app.models import Service_Tickets, db, Mechanics
 from sqlalchemy import select
 from marshmallow import ValidationError
 from . import service_tickets_bp
+from extensions import limiter, cache
 
 # POST /service_tickets
 @service_tickets_bp.route('/service_tickets', methods=['POST'])
@@ -23,12 +24,14 @@ def create_service_ticket():
 
 # GET /service_tickets
 @service_tickets_bp.route('/service_tickets', methods=['GET'])
+@cache.cached(timeout=60)
 def get_service_tickets():
     service_tickets = Service_Tickets.query.all()
     return service_tickets_schema.jsonify(service_tickets), 200
 
 # GET /service_tickets/<id>
 @service_tickets_bp.route('/service_tickets/<int:id>', methods=['GET'])
+@cache.cached(timeout=60)
 def get_service_ticket(id):
     service_ticket = Service_Tickets.query.get_or_404(id)
     return service_tickets_schema.jsonify(service_ticket), 200
