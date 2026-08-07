@@ -1,4 +1,4 @@
-from .schemas import service_tickets_schema, service_tickets_schema
+from .schemas import service_tickets_schema, service_ticket_schema
 from flask import request, jsonify
 from app.models import Service_Tickets, db, Mechanics
 from sqlalchemy import select
@@ -53,6 +53,70 @@ def update_service_ticket(id):
     db.session.commit()
     return service_tickets_schema.jsonify(service_ticket), 200
 
+
+# PUT /service_tickets/<ticket_id>/edit
+# Add and remove multiple mechanics from a ticket
+@service_tickets_bp.route('/service_tickets/<int:ticket_id>/edit', methods=['PUT'])
+def edit_ticket_mechanics(ticket_id):
+    """
+    Add and remove mechanics from a ticket in one request
+    
+    Expected JSON:
+    {
+        "add_ids": [1, 2, 3],
+        "remove_ids": [4, 5]
+    }
+    """
+    try:
+        data = request.get_json()
+        add_ids = data.get('add_ids', [])
+        remove_ids = data.get('remove_ids', [])
+
+        if not isinstance(add_ids, list) or not isinstance(remove_ids, list):
+            return jsonify({'message': 'add_ids and remove_ids must be lists'}), 400
+        
+        ticket = db.session.execute(
+            select(Service_Tickets).where(Service_Tickets.id == ticket_id)
+        ).scalar_one_or_none()
+        
+        if not ticket:
+            return jsonify({'message': 'Ticket not found'}), 404
+        
+        for mechanic_id in remove_ids:
+            mechanic = db.session.execute(
+                select(Mechanics).where(Mechanics.id == mechanic_id)
+            ).scalar_one_or_none()
+            
+            if mechanic and mechanic in ticket.mechanics:
+                ticket.mechanics.remove(mechanic)
+            elif not mechanic:
+                return jsonify({'message': f'Mechanic {mechanic_id} not found'}), 404
+        
+        for mechanic_id in add_ids:
+            mechanic = db.session.execute(
+                select(Mechanics).where(Mechanics.id == mechanic_id)
+            ).scalar_one_or_none()
+            
+            if not mechanic:
+                return jsonify({'message': f'Mechanic {mechanic_id} not found'}), 404
+            
+            if mechanic not in ticket.mechanics:
+                ticket.mechanics.append(mechanic)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Mechanics updated successfully',
+            'ticket': service_ticket_schema.dump(ticket)
+        }), 200
+        
+    except TypeError:
+        return jsonify({'message': 'Invalid payload, expecting JSON'}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Error updating ticket mechanics', 'error': str(e)}), 500
+
 # Assign a mechanic to a ticket
 @service_tickets_bp.route('/<ticket_id>/assign-mechanic/<mechanic_id>', methods=['PUT'])
 def assign_mechanic(ticket_id, mechanic_id):
@@ -67,7 +131,6 @@ def assign_mechanic(ticket_id, mechanic_id):
         return jsonify({'message': f'Mechanic {mechanic_id} assigned to ticket {ticket_id}'}), 200
     
     return jsonify({'message': 'Mechanic already assigned'}), 400
-
 
 # Remove a mechanic from a ticket
 @service_tickets_bp.route('/<ticket_id>/remove-mechanic/<mechanic_id>', methods=['PUT'])
