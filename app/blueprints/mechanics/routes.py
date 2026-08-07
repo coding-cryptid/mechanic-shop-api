@@ -9,7 +9,7 @@ from app.extensions import limiter, cache
 
 # POST /mechanics
 @mechanics_bp.route('/mechanics', methods=['POST'])
-@limiter.limit("3 per hour")
+@limiter.limit("6 per hour")
 def create_mechanic():
     from flask import request, jsonify
 
