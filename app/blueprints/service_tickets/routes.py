@@ -117,32 +117,32 @@ def edit_ticket_mechanics(ticket_id):
         db.session.rollback()
         return jsonify({'message': 'Error updating ticket mechanics', 'error': str(e)}), 500
 
-# Assign a mechanic to a ticket
-@service_tickets_bp.route('/<ticket_id>/assign-mechanic/<mechanic_id>', methods=['PUT'])
-def assign_mechanic(ticket_id, mechanic_id):
-    # ticket = Service_Tickets.query.get_or_404(ticket_id)
-    ticket = db.session.execute(db.select(Service_Tickets).where(Service_Tickets.id == ticket_id)).scalar_one_or_none()
-    # mechanic = Mechanics.query.get_or_404(mechanic_id)
-    mechanic = db.session.execute(db.select(Mechanics).where(Mechanics.id == mechanic_id)).scalar_one_or_none()
+# # Assign a mechanic to a ticket
+# @service_tickets_bp.route('/<ticket_id>/assign-mechanic/<mechanic_id>', methods=['PUT'])
+# def assign_mechanic(ticket_id, mechanic_id):
+#     # ticket = Service_Tickets.query.get_or_404(ticket_id)
+#     ticket = db.session.execute(db.select(Service_Tickets).where(Service_Tickets.id == ticket_id)).scalar_one_or_none()
+#     # mechanic = Mechanics.query.get_or_404(mechanic_id)
+#     mechanic = db.session.execute(db.select(Mechanics).where(Mechanics.id == mechanic_id)).scalar_one_or_none()
 
-    if mechanic not in ticket.mechanics:
-        ticket.mechanics.append(mechanic)
-        db.session.commit()
-        return jsonify({'message': f'Mechanic {mechanic_id} assigned to ticket {ticket_id}'}), 200
+#     if mechanic not in ticket.mechanics:
+#         ticket.mechanics.append(mechanic)
+#         db.session.commit()
+#         return jsonify({'message': f'Mechanic {mechanic_id} assigned to ticket {ticket_id}'}), 200
     
-    return jsonify({'message': 'Mechanic already assigned'}), 400
+#     return jsonify({'message': 'Mechanic already assigned'}), 400
 
-# Remove a mechanic from a ticket
-@service_tickets_bp.route('/<ticket_id>/remove-mechanic/<mechanic_id>', methods=['PUT'])
-def remove_mechanic(ticket_id, mechanic_id):
-    # ticket = Service_Tickets.query.get_or_404(ticket_id)
-    ticket = db.session.execute(db.select(Service_Tickets).where(Service_Tickets.id == ticket_id)).scalar_one_or_none()
-    # mechanic = Mechanics.query.get_or_404(mechanic_id)
-    mechanic = db.session.execute(db.select(Mechanics).where(Mechanics.id == mechanic_id)).scalar_one_or_none()
+# # Remove a mechanic from a ticket
+# @service_tickets_bp.route('/<ticket_id>/remove-mechanic/<mechanic_id>', methods=['PUT'])
+# def remove_mechanic(ticket_id, mechanic_id):
+#     # ticket = Service_Tickets.query.get_or_404(ticket_id)
+#     ticket = db.session.execute(db.select(Service_Tickets).where(Service_Tickets.id == ticket_id)).scalar_one_or_none()
+#     # mechanic = Mechanics.query.get_or_404(mechanic_id)
+#     mechanic = db.session.execute(db.select(Mechanics).where(Mechanics.id == mechanic_id)).scalar_one_or_none()
 
-    if mechanic in ticket.mechanics:
-        ticket.mechanics.remove(mechanic)
-        db.session.commit()
-        return jsonify({'message': f'Mechanic {mechanic_id} removed from ticket {ticket_id}'}), 200
+#     if mechanic in ticket.mechanics:
+#         ticket.mechanics.remove(mechanic)
+#         db.session.commit()
+#         return jsonify({'message': f'Mechanic {mechanic_id} removed from ticket {ticket_id}'}), 200
     
-    return jsonify({'message': 'Mechanic not assigned to this ticket'}), 400
+#     return jsonify({'message': 'Mechanic not assigned to this ticket'}), 400
