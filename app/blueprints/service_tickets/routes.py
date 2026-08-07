@@ -9,18 +9,32 @@ from app.extensions import limiter, cache
 # POST /service_tickets
 @service_tickets_bp.route('/service_tickets', methods=['POST'])
 def create_service_ticket():
-    from flask import request, jsonify
+    try:
+        data = request.get_json()
 
-    data = request.get_json()
-    new_service_ticket = Service_Tickets(
-        customer_id=data['customer_id'],
-        vin=data['vin'],
-        service_date=data['service_date'],
-        service_description=data['service_description']
-    )
-    db.session.add(new_service_ticket)
-    db.session.commit()
-    return service_tickets_schema.jsonify(new_service_ticket), 201
+        new_service_ticket = Service_Tickets(
+            customer_id=data['customer_id'],
+            vin=data['vin'],
+            service_date=data['service_date'],
+            service_description=data['service_description']
+        )
+
+        db.session.add(new_service_ticket)
+        db.session.commit()
+        return service_ticket_schema.jsonify(new_service_ticket), 201
+
+    except (KeyError, TypeError):
+        db.session.rollback()
+        return jsonify({
+            'message': 'Invalid payload'
+        }), 400
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'message': 'Error creating service ticket',
+            'error': str(e)
+        }), 500
 
 # GET /service_tickets
 @service_tickets_bp.route('/service_tickets', methods=['GET'])
