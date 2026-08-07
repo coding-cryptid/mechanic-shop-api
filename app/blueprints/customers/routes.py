@@ -7,6 +7,8 @@ from . import customers_bp
 from app.extensions import limiter, cache
 from app.utils.util import encode_token, token_required
 
+CUSTOMERS_PER_PAGE = 20
+
 # POST /customers
 @customers_bp.route('/customers', methods=['POST'])
 def create_customer():
@@ -22,13 +24,53 @@ def create_customer():
     db.session.commit()
     return customer_schema.jsonify(new_customer), 201
 
-# GET /customers
+# GET /customers w/ Pagination
 @customers_bp.route('/customers', methods=['GET'])
 @cache.cached(timeout=60)
 def get_customers():
-    # customers = Customer.query.all()
-    customers = db.session.execute(db.select(Customer)).scalars().all()
-    return customers_schema.jsonify(customers), 200
+    """
+    Get all customers with pagination (20 per page)
+    
+    Query parameters:
+    - page: page number (default: 1)
+    
+    Example: GET /customers?page=1
+    """
+    try:
+        page = request.args.get('page', 1, type=int)
+        
+        if page < 1:
+            return jsonify({'message': 'Page number must be 1 or greater'}), 400
+        
+        query = select(Customer)
+        paginated_query = db.session.execute(
+            query.limit(CUSTOMERS_PER_PAGE).offset((page - 1) * CUSTOMERS_PER_PAGE)
+        ).scalars()
+        
+        customers = paginated_query.all()
+        
+        total_count = db.session.execute(select(Customer)).scalars().all()
+        total_customers = len(total_count)
+        total_pages = (total_customers + CUSTOMERS_PER_PAGE - 1) // CUSTOMERS_PER_PAGE
+        
+        if page > total_pages and total_customers > 0:
+            return jsonify({'message': f'Page {page} does not exist. Total pages: {total_pages}'}), 404
+        
+        return jsonify({
+            'status': 'success',
+            'customers': customers_schema.dump(customers),
+            'pagination': {
+                'current_page': page,
+                'total_pages': total_pages,
+                'total_customers': total_customers,
+                'customers_per_page': CUSTOMERS_PER_PAGE,
+                'has_next': page < total_pages,
+                'has_prev': page > 1
+            }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'message': 'Error retrieving customers', 'error': str(e)}), 500
 
 # GET /customers/<id>
 @customers_bp.route('/customers/<int:id>', methods=['GET'])

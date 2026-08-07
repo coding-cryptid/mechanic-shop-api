@@ -1,8 +1,8 @@
 from app.utils.util import token_required
 from .schemas import mechanic_schema, mechanics_schema
 from flask import request, jsonify
-from app.models import Mechanics, db
-from sqlalchemy import select
+from app.models import Mechanics, Service_Tickets, db
+from sqlalchemy import desc, func, select
 from marshmallow import ValidationError
 from . import mechanics_bp
 from app.extensions import limiter, cache
@@ -54,6 +54,47 @@ def update_mechanic(id):
     mechanic.salary = data['salary']
     db.session.commit()
     return mechanic_schema.jsonify(mechanic), 200
+
+# GET /mechanics/leaderboard
+# Mechanics ranked by most tickets worked on
+@mechanics_bp.route('/mechanics/leaderboard', methods=['GET'])
+@cache.cached(timeout=300)
+def get_mechanics_leaderboard():
+    """
+    Get all mechanics ranked by number of tickets they've worked on
+    Returns mechanics in descending order (most tickets first)
+    """
+    try:
+        query = select(
+            Mechanics,
+            func.count(Service_Tickets.id).label('ticket_count')
+        ).outerjoin(
+            Mechanics.service_tickets
+        ).group_by(
+            Mechanics.id
+        ).order_by(
+            desc('ticket_count')
+        )
+        
+        result = db.session.execute(query).all()
+        
+        leaderboard = []
+        for mechanic, ticket_count in result:
+            mechanic_data = mechanic_schema.dump(mechanic)
+            mechanic_data['tickets_completed'] = ticket_count
+            leaderboard.append(mechanic_data)
+        
+        return jsonify({
+            'status': 'success',
+            'leaderboard': leaderboard,
+            'total_mechanics': len(leaderboard)
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'message': 'Error retrieving mechanics leaderboard',
+            'error': str(e)
+        }), 500
 
 # DELETE /mechanics/<id>
 @mechanics_bp.route('/mechanics/<int:id>', methods=['DELETE'])
