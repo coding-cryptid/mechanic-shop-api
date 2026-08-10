@@ -37,6 +37,7 @@ class Service_Tickets(Base):
 
     customer: Mapped['Customer'] = relationship(back_populates='service_tickets')
     mechanics: Mapped[List['Mechanics']] = relationship(secondary=service_mechanics, back_populates='service_tickets')
+    inventory_items: Mapped[List['ServiceTicketInventory']] = relationship(back_populates='service_ticket')
 
 class Mechanics(Base):
     __tablename__ = 'mechanics'
@@ -81,9 +82,4 @@ class Inventory(Base):
     name: Mapped[str] = mapped_column(db.String(255), nullable=False)
     price: Mapped[float] = mapped_column(db.Float, nullable=False)
 
-    service_ticket_items: Mapped[List['ServiceTicketInventory']] = relationship(
-        back_populates='inventory'
-    )
-    inventory_items: Mapped[List['ServiceTicketInventory']] = relationship(
-        back_populates='service_ticket'
-    )
+    service_ticket_items: Mapped[List['ServiceTicketInventory']] = relationship(back_populates='inventory')
