@@ -12,7 +12,22 @@ from app.extensions import limiter, cache
 def create_service_ticket():
     try:
         data = request.get_json()
-        service_date = datetime.strptime(data['service_date'], '%m/%d/%Y').date()
+
+        date_formats = ['%m/%d/%Y', '%m/%d/%y', '%Y-%m-%d', '%d/%m/%Y']
+        service_date = None
+        date_string = data['service_date']
+        
+        for fmt in date_formats:
+            try:
+                service_date = datetime.strptime(date_string, fmt).date()
+                break
+            except ValueError:
+                continue
+        
+        if not service_date:
+            return jsonify({
+                'message': 'Invalid date format. Use: MM/DD/YYYY, MM/DD/YY, YYYY-MM-DD, or DD/MM/YYYY'
+            }), 400
 
         new_service_ticket = Service_Tickets(
             customer_id=data['customer_id'],
@@ -27,9 +42,7 @@ def create_service_ticket():
 
     except (KeyError, TypeError) as e:
         db.session.rollback()
-        return jsonify({
-            'message': 'Invalid payload'
-        }), 400
+        return jsonify({'message': 'Invalid payload'}), 400
 
     except Exception as e:
         db.session.rollback()
