@@ -191,14 +191,12 @@ def add_part_to_ticket(ticket_id):
 def get_ticket_parts(ticket_id):
     """Get all parts used on a service ticket with quantities"""
     try:
-        # Check if ticket exists
         ticket_query = select(Service_Tickets).where(Service_Tickets.id == ticket_id)
         ticket = db.session.execute(ticket_query).scalar_one_or_none()
         
         if not ticket:
             return jsonify({'message': 'Service ticket not found'}), 404
         
-        # Get all parts on this ticket
         query = select(ServiceTicketInventory).where(
             ServiceTicketInventory.service_ticket_id == ticket_id
         )
