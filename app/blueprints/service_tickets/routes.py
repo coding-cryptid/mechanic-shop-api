@@ -1,5 +1,4 @@
-import datetime
-
+from datetime import datetime
 from .schemas import service_tickets_schema, service_ticket_schema
 from flask import request, jsonify
 from app.models import Service_Tickets, db, Mechanics
