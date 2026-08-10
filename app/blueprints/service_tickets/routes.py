@@ -1,3 +1,5 @@
+import datetime
+
 from .schemas import service_tickets_schema, service_ticket_schema
 from flask import request, jsonify
 from app.models import Service_Tickets, db, Mechanics
@@ -11,11 +13,12 @@ from app.extensions import limiter, cache
 def create_service_ticket():
     try:
         data = request.get_json()
+        service_date = datetime.strptime(data['service_date'], '%m/%d/%Y').date()
 
         new_service_ticket = Service_Tickets(
             customer_id=data['customer_id'],
             vin=data['vin'],
-            service_date=data['service_date'],
+            service_date=service_date,
             service_description=data['service_description']
         )
 
