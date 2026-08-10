@@ -19,7 +19,8 @@ def login():
         errors = login_schema.validate(credentials)
         if errors:
             return jsonify({'message': 'Invalid payload', 'errors': errors}), 400
-        
+
+        name = credentials['name']
         email = credentials['email']
         password = credentials['password']
         
