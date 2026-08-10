@@ -6,6 +6,7 @@ from .extensions import ma, limiter, cache
 from .blueprints.customers import customers_bp
 from .blueprints.service_tickets import service_tickets_bp
 from .blueprints.mechanics import mechanics_bp
+from app.blueprints.inventory import inventory_bp
 
 load_dotenv()
 
@@ -27,5 +28,6 @@ def create_app(config_name="DevelopmentConfig"):
         url_prefix="/service_tickets",
     )
     app.register_blueprint(mechanics_bp, url_prefix="/mechanics")
+    app.register_blueprint(inventory_bp, url_prefix='/inventory')
 
     return app
