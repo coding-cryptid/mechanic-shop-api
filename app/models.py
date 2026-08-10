@@ -56,3 +56,34 @@ class User(Base):
     name: Mapped[str] = mapped_column(db.String(255), nullable=False)
     email: Mapped[str] = mapped_column(db.String(255), nullable=False, unique=True)
     password: Mapped[str] = mapped_column(db.String(255), nullable=False)
+
+class ServiceTicketInventory(Base):
+    """Junction table: tracks which parts are used on which tickets + quantity"""
+    __tablename__ = 'service_ticket_inventory'
+
+    service_ticket_id: Mapped[int] = mapped_column(
+        ForeignKey('service_tickets.id'), 
+        primary_key=True
+    )
+    inventory_id: Mapped[int] = mapped_column(
+        ForeignKey('inventory.id'), 
+        primary_key=True
+    )
+    quantity: Mapped[int] = mapped_column(db.Integer, nullable=False, default=1)
+
+    service_ticket: Mapped['Service_Tickets'] = relationship(back_populates='inventory_items')
+    inventory: Mapped['Inventory'] = relationship(back_populates='service_ticket_items')
+
+class Inventory(Base):
+    __tablename__ = 'inventory'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(db.String(255), nullable=False)
+    price: Mapped[float] = mapped_column(db.Float, nullable=False)
+
+    service_ticket_items: Mapped[List['ServiceTicketInventory']] = relationship(
+        back_populates='inventory'
+    )
+    inventory_items: Mapped[List['ServiceTicketInventory']] = relationship(
+        back_populates='service_ticket'
+    )
