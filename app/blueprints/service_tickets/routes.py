@@ -23,7 +23,7 @@ def create_service_ticket():
         db.session.commit()
         return service_ticket_schema.jsonify(new_service_ticket), 201
 
-    except (KeyError, TypeError):
+    except (KeyError, TypeError) as e:
         db.session.rollback()
         return jsonify({
             'message': 'Invalid payload'
