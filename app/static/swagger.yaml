@@ -3,3 +3,10 @@ info:
   title: 'Mechanic Shop API'
   version: '1.0.0'
   description: 'API to manage a mechanic shop system.'
+host: '127.0.0.1:5000'
+schemes:
+  - 'http'
+consumes:
+  - 'application/json'
+produces:
+  - 'application/json'
