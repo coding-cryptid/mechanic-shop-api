@@ -42,7 +42,11 @@ def create_service_ticket():
 
     except (KeyError, TypeError) as e:
         db.session.rollback()
-        return jsonify({'message': 'Invalid payload'}), 400
+        return jsonify({
+            'message': 'Invalid payload',
+            'error': str(e),
+            'type': type(e).__name__
+        }), 400
 
     except Exception as e:
         db.session.rollback()
