@@ -1,0 +1,5 @@
+flask-swagger: '0.2.14'
+info:
+  title: 'Mechanic Shop API'
+  version: '1.0.0'
+  description: 'API to manage a mechanic shop system.'
