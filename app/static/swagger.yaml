@@ -10,3 +10,73 @@ consumes:
   - 'application/json'
 produces:
   - 'application/json'
+
+paths:
+# USER ENDPOINTS
+  /user/login:
+    post:
+      tags:
+        - 'User'
+      summary: 'User login'
+      description: 'Authenticate a user and get a JWT.'
+      parameters: 
+        - in: 'body'
+          name: 'body'
+          description: 'User credentials'
+          required: true
+          schema:
+            type: 'object'
+            properties:
+              username:
+                type: 'string'
+              password:
+                type: 'string'
+      responses: 
+        200:
+          description: 'Successful login'
+          schema:
+            type: 'object'
+            properties:
+              token:
+                type: 'string'
+        401:
+          description: 'Invalid credentials'
+        400:
+          description: 'Bad request'
+  /user/:
+    delete:
+      tags:
+        - 'User'
+      summary: 'Delete user account'
+      description: 'Delete the authenticated user account.'
+      security:
+        - BearerAuth: []
+      responses:
+        204:
+          description: 'User account deleted successfully'
+        500:
+          description: 'Error deleting user account'
+        404:
+          description: 'User not found'
+  /user/my-tickets:
+    get:
+      tags:
+        - 'User'
+      summary: 'Get user tickets'
+      description: 'Retrieve all tickets associated with the authenticated user.'
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: 'List of user tickets'
+          schema:
+            type: 'array'
+            items:
+              $ref: '#/definitions/Ticket'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Error retrieving tickets'
+# CUSTOMER ENDPOINTS
+  
+    
