@@ -1,8 +1,6 @@
 from datetime import datetime
-
 from flask import request, jsonify
 from sqlalchemy import select
-
 from app.models import Service_Tickets, Mechanics, db
 from .schemas import service_tickets_schema, service_ticket_schema
 from . import service_tickets_bp
