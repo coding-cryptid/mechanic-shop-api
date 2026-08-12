@@ -1,6 +1,6 @@
 from flask import jsonify, request
 from sqlalchemy import select
-from app.blueprints.user import user_bp
+from app.blueprints.users import user_bp
 from app.models import User, ServiceTicket, db
 from app.extensions import limiter
 from .schemas import user_schema, users_schema, LoginSchema
@@ -10,7 +10,7 @@ from werkzeug.security import check_password_hash
 
 login_schema = LoginSchema()
 
-@user_bp.route('/login', methods=[ 'POST' ])
+@users_bp.route('/login', methods=[ 'POST' ])
 def login():
     """Authenticate user and return JWT token"""
     try:
@@ -48,7 +48,7 @@ def login():
     }), 401
 
 
-@user_bp.route('/', methods=['DELETE'])
+@users_bp.route('/', methods=['DELETE'])
 @token_required
 def delete_user(user_id):
     """Delete the authenticated user (requires token)"""
@@ -67,7 +67,7 @@ def delete_user(user_id):
         db.session.rollback()
         return jsonify({'message': 'Error deleting user', 'error': str(e)}), 500
 
-@user_bp.route('/my-tickets', methods=['GET'])
+@users_bp.route('/my-tickets', methods=['GET'])
 @token_required
 def get_my_tickets(user_id):
     """Get all service tickets for the authenticated user"""
