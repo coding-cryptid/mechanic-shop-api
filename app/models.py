@@ -50,7 +50,7 @@ class Mechanics(Base):
 
     service_tickets: Mapped[List['Service_Tickets']] = relationship(secondary=service_mechanics, back_populates='mechanics')
 
-class User(Base):
+class Users(Base):
     __tablename__ = 'users'
 
     id: Mapped[int] = mapped_column(primary_key=True)
