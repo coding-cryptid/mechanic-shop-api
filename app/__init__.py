@@ -6,7 +6,7 @@ from .extensions import ma, limiter, cache
 from .blueprints.customers import customers_bp
 from .blueprints.service_tickets import service_tickets_bp
 from .blueprints.mechanics import mechanics_bp
-from app.blueprints.inventory import inventory_bp
+from .blueprints.inventory import inventory_bp
 from .blueprints.users import users_bp
 
 load_dotenv()
