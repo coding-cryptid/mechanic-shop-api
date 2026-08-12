@@ -3,12 +3,13 @@ from sqlalchemy import select
 from app.blueprints.users import users_bp
 from app.models import Service_Tickets, Users, db
 from app.extensions import limiter
-from .schemas import user_schema, users_schema, LoginSchema
+from .schemas import user_schema, users_schema, LoginSchema, UserSchema
 from app.utils.util import encode_token, token_required
 from werkzeug.security import check_password_hash
 
 
 login_schema = LoginSchema()
+user_schema = UserSchema()
 
 @users_bp.route('/login', methods=[ 'POST' ])
 def login():
