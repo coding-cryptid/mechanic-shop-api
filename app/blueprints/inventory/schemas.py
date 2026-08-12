@@ -1,8 +1,9 @@
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
 from app.models import Inventory, ServiceTicketInventory
+from app.extensions import ma
 
 
-class InventorySchema(SQLAlchemyAutoSchema):
+class InventorySchema(ma.SQLAlchemyAutoSchema):
     """Schema for single Inventory item"""
     class Meta:
         model = Inventory
@@ -13,7 +14,7 @@ class InventorySchema(SQLAlchemyAutoSchema):
     price = auto_field()
 
 
-class InventoriesSchema(SQLAlchemyAutoSchema):
+class InventoriesSchema(ma.SQLAlchemyAutoSchema):
     """Schema for multiple Inventory items"""
     class Meta:
         model = Inventory
@@ -25,7 +26,7 @@ class InventoriesSchema(SQLAlchemyAutoSchema):
     price = auto_field()
 
 
-class ServiceTicketInventorySchema(SQLAlchemyAutoSchema):
+class ServiceTicketInventorySchema(ma.SQLAlchemyAutoSchema):
     """Schema for junction table (part + quantity on a ticket)"""
     class Meta:
         model = ServiceTicketInventory
