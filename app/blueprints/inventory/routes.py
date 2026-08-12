@@ -2,6 +2,7 @@ from flask import request, jsonify
 from sqlalchemy import select
 from app.models import Inventory, ServiceTicketInventory, Service_Tickets, db
 from app.extensions import cache
+from app.utils.util import token_required
 from . import inventory_bp
 from .schemas import inventory_schema, inventories_schema, service_ticket_inventory_schema
 
@@ -94,6 +95,7 @@ def update_inventory(id):
 
 # DELETE /inventory/<id> - Delete a part
 @inventory_bp.route('/inventory/<int:id>', methods=['DELETE'])
+@token_required
 def delete_inventory(id):
     """Delete an inventory item"""
     try:
