@@ -1,5 +1,4 @@
 from flask_marshmallow import Schema, fields, validate
-
 from app.extensions import ma
 from app.models import Users
 
