@@ -7,6 +7,7 @@ from .blueprints.customers import customers_bp
 from .blueprints.service_tickets import service_tickets_bp
 from .blueprints.mechanics import mechanics_bp
 from app.blueprints.inventory import inventory_bp
+from .blueprints.users import users_bp
 
 load_dotenv()
 
@@ -29,5 +30,6 @@ def create_app(config_name="DevelopmentConfig"):
     )
     app.register_blueprint(mechanics_bp, url_prefix="/mechanics")
     app.register_blueprint(inventory_bp, url_prefix='/inventory')
+    app.register_blueprint(users_bp, url_prefix='/users')
 
     return app
