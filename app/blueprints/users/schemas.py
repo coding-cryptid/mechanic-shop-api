@@ -1,11 +1,11 @@
 from flask_marshmallow import Schema, fields, validate
 
 from app.extensions import ma
-from app.models import User
+from app.models import Users
 
 class UserSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
-        model = User
+        model = Users
         load_instance = True
 
 user_schema = UserSchema()

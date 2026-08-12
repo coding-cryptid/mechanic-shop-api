@@ -1,7 +1,7 @@
 from flask import jsonify, request
 from sqlalchemy import select
 from app.blueprints.users import users_bp
-from app.models import ServiceTicket, Users, db
+from app.models import Service_Tickets, Users, db
 from app.extensions import limiter
 from .schemas import user_schema, users_schema, LoginSchema
 from app.utils.util import encode_token, token_required
@@ -72,7 +72,7 @@ def delete_user(user_id):
 def get_my_tickets(user_id):
     """Get all service tickets for the authenticated user"""
     try:
-        query = select(ServiceTicket).where(ServiceTicket.user_id == user_id)
+        query = select(Service_Tickets).where(Service_Tickets.user_id == user_id)
         tickets = db.session.execute(query).scalars().all()
 
         tickets_data = [
