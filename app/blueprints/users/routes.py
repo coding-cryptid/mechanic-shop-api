@@ -1,7 +1,7 @@
 from flask import jsonify, request
 from sqlalchemy import select
 from app.blueprints.users import users_bp
-from app.models import User, ServiceTicket, db
+from app.models import User, ServiceTicket, Users, db
 from app.extensions import limiter
 from .schemas import user_schema, users_schema, LoginSchema
 from app.utils.util import encode_token, token_required
@@ -31,7 +31,7 @@ def login():
             "message": "Invalid expecting JSON"
         }), 400
 
-    query = select(User).where(User.email == email)
+    query = select(Users).where(Users.email == email)
     user = db.session.execute(query).scalar_one_or_none()
 
     if user and check_password_hash(user.password, password):
@@ -53,7 +53,7 @@ def login():
 def delete_user(user_id):
     """Delete the authenticated user (requires token)"""
     try:
-        query = select(User).where(User.id == user_id)
+        query = select(Users).where(Users.id == user_id)
         user = db.session.execute(query).scalars().first()
 
         if not user:
