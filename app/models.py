@@ -1,5 +1,5 @@
 from typing import List
-from sqlalchemy import ForeignKey
+from sqlalchemy import Date, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
 from flask_sqlalchemy import SQLAlchemy
 from datetime import date
