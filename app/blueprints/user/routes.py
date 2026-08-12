@@ -10,7 +10,7 @@ from werkzeug.security import check_password_hash
 
 login_schema = LoginSchema()
 
-@user_bp.route("/login", methods=["POST"])
+@user_bp.route('/login', methods=[ 'POST' ])
 def login():
     """Authenticate user and return JWT token"""
     try:
