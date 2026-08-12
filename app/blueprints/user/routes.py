@@ -10,7 +10,7 @@ from werkzeug.security import check_password_hash
 
 login_schema = LoginSchema()
 
-@user_bp.route("/login", methods=['POST'])
+@user_bp.route("/login", methods=["POST"])
 def login():
     """Authenticate user and return JWT token"""
     try:
@@ -18,14 +18,18 @@ def login():
 
         errors = login_schema.validate(credentials)
         if errors:
-            return jsonify({'message': 'Invalid payload', 'errors': errors}), 400
+            return jsonify({
+                "message": "Invalid payload",
+                "errors": errors
+            }), 400
 
-        name = credentials['name']
-        email = credentials['email']
-        password = credentials['password']
-        
+        email = credentials["email"]
+        password = credentials["password"]
+
     except TypeError:
-        return jsonify({'message': 'Invalid payload, expecting JSON'}), 400
+        return jsonify({
+            "message": "Invalid expecting JSON"
+        }), 400
 
     query = select(User).where(User.email == email)
     user = db.session.execute(query).scalar_one_or_none()
@@ -33,14 +37,15 @@ def login():
     if user and check_password_hash(user.password, password):
         auth_token = encode_token(user.id)
 
-        response = {
+        return jsonify({
             "status": "success",
-            "message": "Successfully Logged In",
+            "message": "Successfully Loggd In",
             "auth_token": auth_token
-        }
-        return jsonify(response), 200
-    else:
-        return jsonify({'message': "Invalid email or password"}), 401
+        }), 200
+
+    return jsonify({
+        "message": "Invalid email or password"
+    }), 401
 
 
 @user_bp.route('/', methods=['DELETE'])
