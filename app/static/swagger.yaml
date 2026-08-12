@@ -2,81 +2,1174 @@ flask-swagger: '0.2.14'
 info:
   title: 'Mechanic Shop API'
   version: '1.0.0'
-  description: 'API to manage a mechanic shop system.'
-host: '127.0.0.1:5000'
+  description: 'Complete REST API for managing a mechanic shop system.'
 schemes:
   - 'http'
 consumes:
   - 'application/json'
 produces:
   - 'application/json'
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+
+tags:
+  - name: Authentication
+    description: User authentication endpoints
+  - name: Customers
+    description: Customer management endpoints
+  - name: Mechanics
+    description: Mechanic staff management endpoints
+  - name: Service Tickets
+    description: Service ticket and appointment management
+  - name: Inventory
+    description: Parts and inventory management
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication
+
+  schemas:
+    # CUSTOMER SCHEMAS
+    Customer:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+        phone_number:
+          type: string
+          example: "215-555-0123"
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - name
+        - email
+        - phone_number
+
+    CustomerInput:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+        phone_number:
+          type: string
+          example: "215-555-0123"
+      required:
+        - name
+        - email
+        - phone_number
+
+    CustomersResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "success"
+        customers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Customer'
+        pagination:
+          type: object
+          properties:
+            current_page:
+              type: integer
+              example: 1
+            total_pages:
+              type: integer
+              example: 5
+            total_customers:
+              type: integer
+              example: 87
+            customers_per_page:
+              type: integer
+              example: 20
+            has_next:
+              type: boolean
+              example: true
+            has_prev:
+              type: boolean
+              example: false
+
+    # MECHANIC SCHEMAS
+    Mechanic:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Mike Johnson"
+        email:
+          type: string
+          format: email
+          example: "mike@mechanicshop.com"
+        phone_number:
+          type: string
+          example: "215-555-0124"
+        salary:
+          type: number
+          format: float
+          example: 55000.00
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - name
+        - email
+        - phone_number
+        - salary
+
+    MechanicInput:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Mike Johnson"
+        email:
+          type: string
+          format: email
+          example: "mike@mechanicshop.com"
+        phone_number:
+          type: string
+          example: "215-555-0124"
+        salary:
+          type: number
+          format: float
+          example: 55000.00
+      required:
+        - name
+        - email
+        - phone_number
+        - salary
+
+    MechanicLeaderboard:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone_number:
+          type: string
+        salary:
+          type: number
+        tickets_completed:
+          type: integer
+          example: 42
+
+    MechanicsLeaderboardResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "success"
+        leaderboard:
+          type: array
+          items:
+            $ref: '#/components/schemas/MechanicLeaderboard'
+        total_mechanics:
+          type: integer
+
+    # SERVICE TICKET SCHEMAS
+    ServiceTicket:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        customer_id:
+          type: integer
+          example: 1
+        vin:
+          type: string
+          example: "1HGCM82633A123456"
+        service_date:
+          type: string
+          format: date
+          example: "2024-01-20"
+        service_description:
+          type: string
+          example: "Oil change, tire rotation, and brake inspection"
+        created_at:
+          type: string
+          format: date-time
+        mechanics:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+      required:
+        - customer_id
+        - vin
+        - service_date
+        - service_description
+
+    ServiceTicketInput:
+      type: object
+      properties:
+        customer_id:
+          type: integer
+          example: 1
+        vin:
+          type: string
+          example: "1HGCM82633A123456"
+        service_date:
+          type: string
+          example: "01/20/2024"
+          description: "Accept formats: MM/DD/YYYY, MM/DD/YY, YYYY-MM-DD, or DD/MM/YYYY"
+        service_description:
+          type: string
+          example: "Oil change, tire rotation, and brake inspection"
+      required:
+        - customer_id
+        - vin
+        - service_date
+        - service_description
+
+    ServiceTicketEditMechanics:
+      type: object
+      properties:
+        add_ids:
+          type: array
+          items:
+            type: integer
+          example: [1, 2, 3]
+        remove_ids:
+          type: array
+          items:
+            type: integer
+          example: [4, 5]
+      required:
+        - add_ids
+        - remove_ids
+
+    EditMechanicsResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "success"
+        message:
+          type: string
+          example: "Mechanics updated successfully"
+        ticket:
+          $ref: '#/components/schemas/ServiceTicket'
+
+    # INVENTORY SCHEMAS
+    Inventory:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Synthetic Oil 5W-30"
+        price:
+          type: number
+          format: float
+          example: 24.99
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - name
+        - price
+
+    InventoryInput:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Synthetic Oil 5W-30"
+        price:
+          type: number
+          format: float
+          example: 24.99
+      required:
+        - name
+        - price
+
+    ServiceTicketInventory:
+      type: object
+      properties:
+        inventory_id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Synthetic Oil 5W-30"
+        price:
+          type: number
+          format: float
+          example: 24.99
+        quantity:
+          type: integer
+          example: 2
+        total_cost:
+          type: number
+          format: float
+          example: 49.98
+
+    AddPartToTicketInput:
+      type: object
+      properties:
+        inventory_id:
+          type: integer
+          example: 1
+        quantity:
+          type: integer
+          example: 2
+      required:
+        - inventory_id
+
+    AddPartResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "success"
+        message:
+          type: string
+          example: "Added 2 unit(s) of \"Synthetic Oil 5W-30\" to ticket #1"
+        ticket_id:
+          type: integer
+        inventory_id:
+          type: integer
+        quantity:
+          type: integer
+
+    TicketPartsResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "success"
+        ticket_id:
+          type: integer
+        parts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceTicketInventory'
+        part_count:
+          type: integer
+
+    # USER/AUTH SCHEMAS
+    LoginInput:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "admin"
+        email:
+          type: string
+          format: email
+          example: "admin@mechanicshop.com"
+        password:
+          type: string
+          format: password
+          example: "securepassword123"
+      required:
+        - name
+        - email
+        - password
+
+    LoginResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "success"
+        message:
+          type: string
+          example: "Successfully Logged In"
+        auth_token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    UserTicket:
+      type: object
+      properties:
+        id:
+          type: integer
+        subject:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    UserTicketsResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "success"
+        tickets:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserTicket'
+        count:
+          type: integer
+
+    # ERROR SCHEMAS
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Resource not found"
+        error:
+          type: string
+
+    ValidationError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Invalid payload"
+        errors:
+          type: object
 
 paths:
-# USER ENDPOINTS
-  /user/login:
+  # AUTHENTICATION ENDPOINTS
+  /login:
     post:
       tags:
-        - 'User'
-      summary: 'User login'
-      description: 'Authenticate a user and get a JWT.'
-      parameters: 
-        - in: 'body'
-          name: 'body'
-          description: 'User credentials'
-          required: true
-          schema:
-            type: 'object'
-            properties:
-              username:
-                type: 'string'
-              password:
-                type: 'string'
-      responses: 
-        200:
-          description: 'Successful login'
-          schema:
-            type: 'object'
-            properties:
-              token:
-                type: 'string'
-        401:
-          description: 'Invalid credentials'
-        400:
-          description: 'Bad request'
-  /user/:
+        - Authentication
+      summary: User login
+      description: Authenticate user and receive JWT token for subsequent requests
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginInput'
+            example:
+              name: "admin"
+              email: "admin@mechanicshop.com"
+              password: "securepassword123"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Invalid input format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          description: Invalid email or password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+
+  /:
     delete:
       tags:
-        - 'User'
-      summary: 'Delete user account'
-      description: 'Delete the authenticated user account.'
+        - Authentication
+      summary: Delete authenticated user
+      description: Remove the authenticated user's account (requires valid JWT token)
       security:
         - BearerAuth: []
       responses:
-        204:
-          description: 'User account deleted successfully'
-        500:
-          description: 'Error deleting user account'
-        404:
-          description: 'User not found'
-  /user/my-tickets:
+        '204':
+          description: User deleted successfully
+        '401':
+          description: Unauthorized - invalid or missing token
+        '404':
+          description: User not found
+        '500':
+          description: Server error
+
+  /my-tickets:
     get:
       tags:
-        - 'User'
-      summary: 'Get user tickets'
-      description: 'Retrieve all tickets associated with the authenticated user.'
+        - Authentication
+      summary: Get user's service tickets
+      description: Retrieve all service tickets created by the authenticated user
       security:
         - BearerAuth: []
       responses:
-        200:
-          description: 'List of user tickets'
+        '200':
+          description: User tickets retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserTicketsResponse'
+        '401':
+          description: Unauthorized - invalid or missing token
+        '500':
+          description: Server error
+
+  # CUSTOMER ENDPOINTS
+  /customers:
+    post:
+      tags:
+        - Customers
+      summary: Create a new customer
+      description: Add a new customer to the system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerInput'
+            example:
+              name: "John Doe"
+              email: "john@example.com"
+              phone_number: "215-555-0123"
+      responses:
+        '201':
+          description: Customer created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          description: Invalid input data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '500':
+          description: Server error
+
+    get:
+      tags:
+        - Customers
+      summary: Get all customers
+      description: Retrieve all customers with pagination support (20 per page)
+      parameters:
+        - name: page
+          in: query
           schema:
-            type: 'array'
-            items:
-              $ref: '#/definitions/Ticket'
-        401:
-          description: 'Unauthorized'
-        500:
-          description: 'Error retrieving tickets'
-# CUSTOMER ENDPOINTS
-  
-    
+            type: integer
+            default: 1
+          description: Page number (starts at 1)
+      responses:
+        '200':
+          description: Customers retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomersResponse'
+        '400':
+          description: Invalid page number
+        '404':
+          description: Page not found
+        '500':
+          description: Server error
+
+  /customers/{id}:
+    get:
+      tags:
+        - Customers
+      summary: Get customer by ID
+      description: Retrieve a single customer's details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Customer retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '404':
+          description: Customer not found
+        '500':
+          description: Server error
+
+    put:
+      tags:
+        - Customers
+      summary: Update customer
+      description: Update an existing customer's information
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerInput'
+      responses:
+        '200':
+          description: Customer updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          description: Invalid input data
+        '404':
+          description: Customer not found
+        '500':
+          description: Server error
+
+    delete:
+      tags:
+        - Customers
+      summary: Delete customer
+      description: Remove a customer from the system (requires authentication)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Customer deleted successfully
+        '401':
+          description: Unauthorized - invalid or missing token
+        '404':
+          description: Customer not found
+        '500':
+          description: Server error
+
+  # MECHANIC ENDPOINTS
+  /mechanics:
+    post:
+      tags:
+        - Mechanics
+      summary: Create a new mechanic
+      description: Add a new mechanic to the system (rate limited to 6 per hour)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MechanicInput'
+            example:
+              name: "Mike Johnson"
+              email: "mike@mechanicshop.com"
+              phone_number: "215-555-0124"
+              salary: 55000.00
+      responses:
+        '201':
+          description: Mechanic created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mechanic'
+        '400':
+          description: Invalid input data
+        '429':
+          description: Rate limit exceeded (max 6 per hour)
+        '500':
+          description: Server error
+
+    get:
+      tags:
+        - Mechanics
+      summary: Get all mechanics
+      description: Retrieve list of all mechanics in the system
+      responses:
+        '200':
+          description: Mechanics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Mechanic'
+        '500':
+          description: Server error
+
+  /mechanics/{id}:
+    get:
+      tags:
+        - Mechanics
+      summary: Get mechanic by ID
+      description: Retrieve a single mechanic's details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Mechanic retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mechanic'
+        '404':
+          description: Mechanic not found
+        '500':
+          description: Server error
+
+    put:
+      tags:
+        - Mechanics
+      summary: Update mechanic
+      description: Update an existing mechanic's information
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MechanicInput'
+      responses:
+        '200':
+          description: Mechanic updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mechanic'
+        '400':
+          description: Invalid input data
+        '404':
+          description: Mechanic not found
+        '500':
+          description: Server error
+
+    delete:
+      tags:
+        - Mechanics
+      summary: Delete mechanic
+      description: Remove a mechanic from the system (rate limited to 3 per hour)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Mechanic deleted successfully
+        '401':
+          description: Unauthorized - invalid or missing token
+        '404':
+          description: Mechanic not found
+        '429':
+          description: Rate limit exceeded (max 3 per hour)
+        '500':
+          description: Server error
+
+  /mechanics/leaderboard:
+    get:
+      tags:
+        - Mechanics
+      summary: Get mechanics leaderboard
+      description: Retrieve all mechanics ranked by number of service tickets completed
+      responses:
+        '200':
+          description: Leaderboard retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MechanicsLeaderboardResponse'
+        '500':
+          description: Server error
+
+  # SERVICE TICKET ENDPOINTS
+  /service_tickets:
+    post:
+      tags:
+        - Service Tickets
+      summary: Create a new service ticket
+      description: Create a new service appointment/ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceTicketInput'
+            example:
+              customer_id: 1
+              vin: "1HGCM82633A123456"
+              service_date: "01/20/2024"
+              service_description: "Oil change, tire rotation, and brake inspection"
+      responses:
+        '201':
+          description: Service ticket created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceTicket'
+        '400':
+          description: Invalid input or date format
+        '500':
+          description: Server error
+
+    get:
+      tags:
+        - Service Tickets
+      summary: Get all service tickets
+      description: Retrieve all service tickets in the system
+      responses:
+        '200':
+          description: Service tickets retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceTicket'
+        '500':
+          description: Server error
+
+  /service_tickets/{id}:
+    get:
+      tags:
+        - Service Tickets
+      summary: Get service ticket by ID
+      description: Retrieve a single service ticket's details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Service ticket retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceTicket'
+        '404':
+          description: Service ticket not found
+        '500':
+          description: Server error
+
+    put:
+      tags:
+        - Service Tickets
+      summary: Update service ticket
+      description: Update an existing service ticket's information
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceTicketInput'
+      responses:
+        '200':
+          description: Service ticket updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceTicket'
+        '400':
+          description: Invalid input data
+        '404':
+          description: Service ticket not found
+        '500':
+          description: Server error
+
+  /service_tickets/{ticket_id}/edit:
+    put:
+      tags:
+        - Service Tickets
+      summary: Update ticket mechanics
+      description: Add and remove mechanics from a service ticket in a single request
+      parameters:
+        - name: ticket_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceTicketEditMechanics'
+            example:
+              add_ids: [1, 2, 3]
+              remove_ids: [4, 5]
+      responses:
+        '200':
+          description: Mechanics updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditMechanicsResponse'
+        '400':
+          description: Invalid input format
+        '404':
+          description: Ticket or mechanic not found
+        '500':
+          description: Server error
+
+  # INVENTORY ENDPOINTS
+  /inventory:
+    post:
+      tags:
+        - Inventory
+      summary: Create a new inventory item
+      description: Add a new part to the inventory system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryInput'
+            example:
+              name: "Synthetic Oil 5W-30"
+              price: 24.99
+      responses:
+        '201':
+          description: Inventory item created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Inventory'
+        '400':
+          description: Invalid input data
+        '500':
+          description: Server error
+
+    get:
+      tags:
+        - Inventory
+      summary: Get all inventory items
+      description: Retrieve all parts from inventory
+      responses:
+        '200':
+          description: Inventory items retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Inventory'
+        '500':
+          description: Server error
+
+  /inventory/{id}:
+    get:
+      tags:
+        - Inventory
+      summary: Get inventory item by ID
+      description: Retrieve a single part's details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Inventory item retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Inventory'
+        '404':
+          description: Inventory item not found
+        '500':
+          description: Server error
+
+    put:
+      tags:
+        - Inventory
+      summary: Update inventory item
+      description: Update an existing part's information
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryInput'
+      responses:
+        '200':
+          description: Inventory item updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Inventory'
+        '400':
+          description: Invalid input data
+        '404':
+          description: Inventory item not found
+        '500':
+          description: Server error
+
+    delete:
+      tags:
+        - Inventory
+      summary: Delete inventory item
+      description: Remove a part from the inventory system
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Inventory item deleted successfully
+          content:
+            application/json:
+              example:
+                message: "Inventory item deleted successfully"
+        '404':
+          description: Inventory item not found
+        '500':
+          description: Server error
+
+  /inventory/service-tickets/{ticket_id}/add-part:
+    post:
+      tags:
+        - Inventory
+      summary: Add part to service ticket
+      description: Add an inventory item to a service ticket with quantity
+      parameters:
+        - name: ticket_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddPartToTicketInput'
+            example:
+              inventory_id: 5
+              quantity: 2
+      responses:
+        '201':
+          description: Part added to ticket successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddPartResponse'
+        '400':
+          description: Invalid input data
+        '404':
+          description: Ticket or inventory item not found
+        '500':
+          description: Server error
+
+  /inventory/service-tickets/{ticket_id}/parts:
+    get:
+      tags:
+        - Inventory
+      summary: Get parts on service ticket
+      description: Retrieve all parts used on a specific service ticket
+      parameters:
+        - name: ticket_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Ticket parts retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketPartsResponse'
+        '404':
+          description: Service ticket not found
+        '500':
+          description: Server error
+
+  /inventory/service-tickets/{ticket_id}/parts/{inventory_id}:
+    delete:
+      tags:
+        - Inventory
+      summary: Remove part from service ticket
+      description: Remove a specific part from a service ticket
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: ticket_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: inventory_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Part removed from ticket successfully
+          content:
+            application/json:
+              example:
+                message: "Part removed from ticket #1"
+        '404':
+          description: Part not found on this ticket
+        '500':
+          description: Server error
