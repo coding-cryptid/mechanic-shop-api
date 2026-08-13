@@ -1,7 +1,7 @@
 from flask import jsonify, request
 from sqlalchemy import select
 from app.blueprints.users import users_bp
-from app.models import Service_Tickets, Users, db
+from app.models import Service_Tickets, Users, Customer, db
 from app.extensions import limiter
 from .schemas import user_schema, users_schema, LoginSchema, UserSchema
 from app.utils.util import encode_token, token_required
