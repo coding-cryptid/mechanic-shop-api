@@ -73,26 +73,56 @@ def delete_user(user_id):
 def get_my_tickets(user_id):
     """Get all service tickets for the authenticated user"""
     try:
-        query = select(Service_Tickets).where(Service_Tickets.user_id == user_id)
-        tickets = db.session.execute(query).scalars().all()
+        # Find the logged-in user
+        user = db.session.execute(
+            select(Users).where(Users.id == user_id)
+        ).scalar_one_or_none()
+
+        if not user:
+            return jsonify({
+                'message': 'User not found'
+            }), 404
+
+        # Find the customer account with the same email
+        customer = db.session.execute(
+            select(Customer).where(Customer.email == user.email)
+        ).scalar_one_or_none()
+
+        if not customer:
+            return jsonify({
+                'message': 'Customer account not found'
+            }), 404
+
+        # Get tickets belonging to that customer
+        tickets = db.session.execute(
+            select(Service_Tickets).where(
+                Service_Tickets.customer_id == customer.id
+            )
+        ).scalars().all()
 
         tickets_data = [
             {
                 'id': ticket.id,
-                'subject': ticket.subject,
-                'description': ticket.description,
-                'status': ticket.status,
-                'created_at': ticket.created_at.isoformat() if ticket.created_at else None,
-                'updated_at': ticket.updated_at.isoformat() if ticket.updated_at else None
+                'customer_id': ticket.customer_id,
+                'vin': ticket.vin,
+                'service_date': (
+                    ticket.service_date.isoformat()
+                    if ticket.service_date
+                    else None
+                ),
+                'service_description': ticket.service_description
             }
             for ticket in tickets
         ]
-        
+
         return jsonify({
             'status': 'success',
             'tickets': tickets_data,
             'count': len(tickets_data)
         }), 200
-        
+
     except Exception as e:
-        return jsonify({'message': 'Error retrieving tickets', 'error': str(e)}), 500
+        return jsonify({
+            'message': 'Error retrieving tickets',
+            'error': str(e)
+        }), 500
