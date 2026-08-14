@@ -68,6 +68,7 @@ def delete_user(user_id):
         db.session.rollback()
         return jsonify({'message': 'Error deleting user', 'error': str(e)}), 500
 
+
 @users_bp.route('/my-tickets', methods=['GET'])
 @token_required
 def get_my_tickets(user_id):
@@ -82,6 +83,17 @@ def get_my_tickets(user_id):
             return jsonify({
                 'message': 'User not found'
             }), 404
+
+        # TEMPORARY DEBUGGING
+        print("JWT user_id:", user_id)
+        print("Logged in user:", user.id, user.email)
+
+        customers = db.session.execute(
+            select(Customer)
+        ).scalars().all()
+
+        for c in customers:
+            print("Customer:", c.id, c.email)
 
         # Find the customer account with the same email
         customer = db.session.execute(
