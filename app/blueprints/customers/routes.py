@@ -73,7 +73,7 @@ def get_customers():
         return jsonify({'message': 'Error retrieving customers', 'error': str(e)}), 500
 
 # GET /customers/<id>
-@customers_bp.route('/customers/<int:id>', methods=['GET'])
+@customers_bp.route('/<int:id>', methods=['GET'])
 @cache.cached(timeout=60)
 def get_customer(id):
     # customer = Customer.query.get_or_404(id)
@@ -81,7 +81,7 @@ def get_customer(id):
     return customer_schema.jsonify(customer), 200
 
 # PUT /customers/<id>
-@customers_bp.route('/customers/<int:id>', methods=['PUT'])
+@customers_bp.route('/<int:id>', methods=['PUT'])
 def update_customer(id):
     from flask import request, jsonify
 
@@ -95,10 +95,10 @@ def update_customer(id):
     return customer_schema.jsonify(customer), 200
 
 # DELETE /customers/<id>
-@customers_bp.route('/customers/<int:id>', methods=['DELETE'])
+@customers_bp.route('/<int:id>', methods=['DELETE'])
 @token_required
 def delete_customer(id):
-    customer = Customer.query.get_or_404(id)
+    customer = db.session.execute(db.select(Customer).where(Customer.id == id)).scalar_one_or_none()
     db.session.delete(customer)
     db.session.commit()
     return '', 204
