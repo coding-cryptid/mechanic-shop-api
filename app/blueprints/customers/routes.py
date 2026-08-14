@@ -10,7 +10,7 @@ from app.utils.util import encode_token, token_required
 CUSTOMERS_PER_PAGE = 20
 
 # POST /customers
-@customers_bp.route('/customers', methods=['POST'])
+@customers_bp.route('/', methods=['POST'])
 def create_customer():
     from flask import request, jsonify
 
@@ -25,7 +25,7 @@ def create_customer():
     return customer_schema.jsonify(new_customer), 201
 
 # GET /customers w/ Pagination
-@customers_bp.route('/customers', methods=['GET'])
+@customers_bp.route('/', methods=['GET'])
 @cache.cached(timeout=60)
 def get_customers():
     """
