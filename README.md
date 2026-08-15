@@ -288,7 +288,109 @@ GET http://localhost:5000/service-tickets/
     }
   ]
 ```
-
+## Rate Limiting & Caching
+ 
+The API implements performance optimizations to ensure fair usage and fast response times.
+ 
+### Rate Limiting
+ 
+**What it is:** Rate limiting prevents any single user or client from making too many requests in a short period, protecting the server from being overwhelmed.
+ 
+**How it works:**
+- Each endpoint has a request limit (e.g., "100 requests per hour")
+- When you exceed the limit, you'll receive a **429 Too Many Requests** error
+- The response includes headers telling you when the limit resets
+**Example response when rate limited:**
+```
+HTTP/1.1 429 Too Many Requests
+Retry-After: 3600
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 0
+X-RateLimit-Reset: 1610000000
+```
+ 
+**Tips to avoid hitting limits:**
+- Cache responses in your client application when possible
+- Batch multiple operations when feasible
+- Implement exponential backoff in your retry logic
+- Use pagination to fetch large datasets in smaller chunks
+### Response Caching
+ 
+**What it is:** Caching stores frequently-accessed data in memory, so repeated requests return instantly without hitting the database.
+ 
+**Which endpoints are cached:**
+- List endpoints (GET `/customers/`, GET `/mechanics/`, etc.) are cached for faster browsing
+- Cached responses are automatically invalidated when data is updated
+**How caching helps you:**
+- Faster response times for browsing data
+- Reduced server load
+- Better user experience
+**Cache behavior:**
+- Cached data is typically refreshed every 5-15 minutes (depending on endpoint)
+- Creating, updating, or deleting resources clears related caches immediately
+- No action needed on your part—caching is transparent
+---
+ 
+## Advanced Queries
+ 
+The API includes powerful query capabilities for complex workflows.
+ 
+### Mechanic Ranking by Workload
+ 
+Find out which mechanics have worked on the most service tickets.
+ 
+**Request:**
+```
+GET http://localhost:5000/mechanics/ranking
+```
+ 
+**Response (200 OK):**
+```json
+{
+  "mechanics": [
+    {
+      "id": 2,
+      "name": "Bob Martinez",
+      "email": "bob@shop.com",
+      "tickets_worked": 15
+    },
+    {
+      "id": 1,
+      "name": "Alice Johnson",
+      "email": "alice@shop.com",
+      "tickets_worked": 12
+    }
+  ]
+}
+```
+ 
+**Use cases:**
+- Identify top performers
+- Balance workload among team members
+- Understand skill utilization
+### Pagination for Large Datasets
+ 
+When listing customers, mechanics, or service tickets, the API returns paginated results to improve performance.
+ 
+**Query parameters:**
+- `page`: Which page to retrieve (default: 1)
+- `per_page`: How many items per page (default: 10, max: 100)
+**Example:**
+```
+GET http://localhost:5000/customers/?page=2&per_page=20
+```
+ 
+**Response includes pagination metadata:**
+```json
+{
+  "customers": [...],
+  "pagination": {
+    "page": 2,
+    "per_page": 20,
+    "total": 150,
+    "pages": 8
+  }
+}
 ---
 
 ## Testing with Postman
