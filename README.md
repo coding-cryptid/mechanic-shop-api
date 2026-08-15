@@ -171,29 +171,66 @@ Authorization: Bearer <your_jwt_token>
 ```
 
 ### API Endpoints Overview
-
-#### Customers (`/customers`)
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| POST | `/customers/` | Create a new customer |
-| GET | `/customers/` | List all customers (with pagination) |
-| PUT | `/customers/<id>` | Update a customer |
-| DELETE | `/customers/<id>` | Delete a customer |
-
-#### Mechanics (`/mechanics`)
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| POST | `/mechanics/` | Create a new mechanic |
-| GET | `/mechanics/` | List all mechanics |
-| PUT | `/mechanics/<id>` | Update a mechanic |
-| DELETE | `/mechanics/<id>` | Delete a mechanic |
-
-#### Service Tickets (`/service-tickets`)
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| POST | `/service-tickets/` | Create a new service ticket |
-| GET | `/service-tickets/` | List all tickets (filterable by status, customer) |
-| PUT | `/service-tickets/<id>/edit/` | Assign and/or remove mechanic to a ticket |
+ 
+### Authentication
+ 
+Before accessing most endpoints, you'll need to authenticate using JWT (JSON Web Tokens). The API provides login routes for both customers and mechanics.
+ 
+#### Authentication Endpoints
+ 
+| Method | Endpoint | Purpose | Requires Token |
+|--------|----------|---------|---|
+| POST | `/users/login` | Login as a user (returns JWT token) | No |
+| GET | `/users/my-tickets` | Retrieve service tickets for the logged-in customer | Yes |
+ 
+### Customers (`/customers`)
+ 
+| Method | Endpoint | Purpose | Requires Token |
+|--------|----------|---------|---|
+| POST | `/customers/` | Create a new customer | No |
+| GET | `/customers/` | List all customers (with pagination) | Yes |
+| PUT | `/customers/<id>` | Update a customer | Yes |
+| DELETE | `/customers/<id>` | Delete a customer | Yes |
+ 
+### Mechanics (`/mechanics`)
+ 
+| Method | Endpoint | Purpose | Requires Token |
+|--------|----------|---------|---|
+| POST | `/mechanics/` | Create a new mechanic | No |
+| GET | `/mechanics/` | List all mechanics (with pagination) | No |
+| GET | `/mechanics/ranking` | List mechanics ranked by ticket count (most busy first) | No |
+| PUT | `/mechanics/<id>` | Update a mechanic | Yes |
+| DELETE | `/mechanics/<id>` | Delete a mechanic | Yes |
+ 
+### Service Tickets (`/service-tickets`)
+ 
+| Method | Endpoint | Purpose | Requires Token |
+|--------|----------|---------|---|
+| POST | `/service-tickets/` | Create a new service ticket | No |
+| GET | `/service-tickets/` | List all tickets (filterable by status, customer) | No |
+| PUT | `/service-tickets/<ticket_id>/edit` | Add and remove multiple mechanics from a ticket in one request | Yes |
+| GET | `/service-tickets/<ticket_id>/add-part/<part_id>` | Add an inventory part to a service ticket | Yes |
+ 
+### Inventory (`/inventory`)
+ 
+| Method | Endpoint | Purpose | Requires Token |
+|--------|----------|---------|---|
+| POST | `/inventory/` | Create a new inventory item (part) | Yes |
+| GET | `/inventory/` | List all inventory items | No |
+| PUT | `/inventory/<id>` | Update an inventory item | Yes |
+| DELETE | `/inventory/<id>` | Delete an inventory item | Yes |
+ 
+## Authentication with JWT Tokens
+ 
+The Mechanic Shop API uses **JWT (JSON Web Tokens)** to secure sensitive endpoints. Here's how authentication works:
+ 
+### How JWT Authentication Works
+ 
+1. **Login**: Send your credentials (email and password) to a login endpoint
+2. **Receive Token**: The API returns a JWT token unique to your user
+3. **Store Token**: Save this token in your client application
+4. **Use Token**: Include the token in the `Authorization` header for protected requests
+5. **Token Expiration**: Tokens expire after a set period (check your config for duration)
 
 ### Example API Usage
 
