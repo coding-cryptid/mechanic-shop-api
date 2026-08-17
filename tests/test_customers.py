@@ -115,8 +115,7 @@ class TestCustomersGetAll:
     def test_get_all_customers_non_numeric_page(self, client, db):
         # Negative: Pass non-numeric page value
         response = client.get('/customers?page=abc')
-        
-        # Flask will handle this - should return 400 or 404
+
         assert response.status_code in [400, 404]
     
     def test_get_all_customers_pagination_metadata(self, client, db, sample_customers):
@@ -149,8 +148,7 @@ class TestCustomersGetById:
     def test_get_customer_nonexistent_id(self, client, db):
         # Negative: Retrieve customer with non-existent ID
         response = client.get('/customers/9999')
-        
-        # Should return None or 404 depending on error handling
+
         assert response.status_code in [404, 500]
     
     def test_get_customer_invalid_id_format(self, client, db):
