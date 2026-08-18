@@ -1,8 +1,7 @@
 import unittest
 import json
 
-
-from test_base import APITestCase
+from test_base import APITestCase, uses_fixtures
 
 class TestMechanicsPost(APITestCase):
     # Tests for POST /mechanics - Create mechanic
@@ -15,7 +14,7 @@ class TestMechanicsPost(APITestCase):
             'phone_number': '555-9876',
             'salary': 50000
         }
-        response = self.client.post('/mechanics', json=payload)
+        response = self.client.post('/mechanics/mechanics', json=payload)
         
         self.assertEqual(response.status_code, 201)
         data = json.loads(response.data)
@@ -31,7 +30,7 @@ class TestMechanicsPost(APITestCase):
             'phone_number': '555-9876',
             'salary': 50000
         }
-        response = self.client.post('/mechanics', json=payload)
+        response = self.client.post('/mechanics/mechanics', json=payload)
         
         self.assertIn(response.status_code, [400, 500])
     
@@ -42,7 +41,7 @@ class TestMechanicsPost(APITestCase):
             'phone_number': '555-9876',
             'salary': 50000
         }
-        response = self.client.post('/mechanics', json=payload)
+        response = self.client.post('/mechanics/mechanics', json=payload)
         
         self.assertIn(response.status_code, [400, 500])
     
@@ -53,7 +52,7 @@ class TestMechanicsPost(APITestCase):
             'email': 'bob@example.com',
             'salary': 50000
         }
-        response = self.client.post('/mechanics', json=payload)
+        response = self.client.post('/mechanics/mechanics', json=payload)
         
         self.assertIn(response.status_code, [400, 500])
     
@@ -64,7 +63,7 @@ class TestMechanicsPost(APITestCase):
             'email': 'bob@example.com',
             'phone_number': '555-9876'
         }
-        response = self.client.post('/mechanics', json=payload)
+        response = self.client.post('/mechanics/mechanics', json=payload)
         
         self.assertIn(response.status_code, [400, 500])
     
@@ -76,7 +75,7 @@ class TestMechanicsPost(APITestCase):
             'phone_number': '555-9876',
             'salary': -50000
         }
-        response = self.client.post('/mechanics', json=payload)
+        response = self.client.post('/mechanics/mechanics', json=payload)
 
         self.assertIn(response.status_code, [201, 400])
     
@@ -91,20 +90,20 @@ class TestMechanicsPost(APITestCase):
 
         for i in range(7):
             payload['email'] = f'test{i}@example.com'
-            response = self.client.post('/mechanics', json=payload)
+            response = self.client.post('/mechanics/mechanics', json=payload)
         
         self.assertEqual(response.status_code, 429)
     
     def test_create_mechanic_no_json(self):
         # Negative: No JSON payload
-        response = self.client.post('/mechanics')
+        response = self.client.post('/mechanics/mechanics')
         
         self.assertIn(response.status_code, [400, 500])
     
     def test_create_mechanic_invalid_json(self):
         # Negative: Invalid JSON format
         response = self.client.post(
-            '/mechanics',
+            '/mechanics/mechanics',
             data='invalid json',
             content_type='application/json'
         )
@@ -115,9 +114,10 @@ class TestMechanicsPost(APITestCase):
 class TestMechanicsGetAll(APITestCase):
     # Tests for GET /mechanics - Get all mechanics
     
+    @uses_fixtures(['sample_mechanics'])
     def test_get_all_mechanics_success(self):
         # Positive: Retrieve all mechanics
-        response = self.client.get('/mechanics')
+        response = self.client.get('/mechanics/mechanics')
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
@@ -125,16 +125,17 @@ class TestMechanicsGetAll(APITestCase):
     
     def test_get_all_mechanics_empty(self):
         # Positive: Get mechanics when none exist
-        response = self.client.get('/mechanics')
+        response = self.client.get('/mechanics/mechanics')
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
         self.assertIsInstance(data, list)
         self.assertEqual(len(data), 0)
     
+    @uses_fixtures(['sample_mechanics'])
     def test_get_all_mechanics_returns_correct_fields(self):
         # Positive: Returned mechanics have correct fields
-        response = self.client.get('/mechanics')
+        response = self.client.get('/mechanics/mechanics')
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
@@ -147,9 +148,10 @@ class TestMechanicsGetAll(APITestCase):
             self.assertIn('phone_number', mechanic)
             self.assertIn('salary', mechanic)
     
+    @uses_fixtures(['sample_mechanics'])
     def test_get_all_mechanics_caching(self):
         # Positive: Verify endpoint is cached (cache-control header)
-        response = self.client.get('/mechanics')
+        response = self.client.get('/mechanics/mechanics')
 
         self.assertEqual(response.status_code, 200)
 
@@ -157,9 +159,10 @@ class TestMechanicsGetAll(APITestCase):
 class TestMechanicsGetById(APITestCase):
     # Tests for GET /mechanics/<id> - Get single mechanic
     
+    @uses_fixtures(['sample_mechanics'])
     def test_get_mechanic_by_id_success(self):
         # Positive: Retrieve existing mechanic by ID
-        response = self.client.get('/mechanics/1')
+        response = self.client.get('/mechanics/mechanics/1')
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
@@ -167,25 +170,25 @@ class TestMechanicsGetById(APITestCase):
     
     def test_get_mechanic_nonexistent_id(self):
         # Negative: Retrieve non-existent mechanic
-        response = self.client.get('/mechanics/9999')
+        response = self.client.get('/mechanics/mechanics/9999')
         
         self.assertIn(response.status_code, [404, 500])
     
     def test_get_mechanic_invalid_id_format(self):
         # Negative: Invalid ID format (non-numeric)
-        response = self.client.get('/mechanics/abc')
+        response = self.client.get('/mechanics/mechanics/abc')
         
         self.assertEqual(response.status_code, 404)
     
     def test_get_mechanic_negative_id(self):
         # Negative: Request with negative ID
-        response = self.client.get('/mechanics/-1')
+        response = self.client.get('/mechanics/mechanics/-1')
         
         self.assertIn(response.status_code, [404, 400])
     
     def test_get_mechanic_zero_id(self):
         # Negative: Request with ID of 0
-        response = self.client.get('/mechanics/0')
+        response = self.client.get('/mechanics/mechanics/0')
         
         self.assertIn(response.status_code, [404, 400])
 
@@ -193,9 +196,10 @@ class TestMechanicsGetById(APITestCase):
 class TestMechanicsGetLeaderboard(APITestCase):
     # Tests for GET /mechanics/leaderboard - Get mechanics ranked by tickets
     
+    @uses_fixtures(['sample_mechanics', 'sample_tickets'])
     def test_get_leaderboard_success(self):
         # Positive: Retrieve mechanics leaderboard
-        response = self.client.get('/mechanics/leaderboard')
+        response = self.client.get('/mechanics/mechanics/leaderboard')
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
@@ -205,16 +209,17 @@ class TestMechanicsGetLeaderboard(APITestCase):
     
     def test_get_leaderboard_empty(self):
         # Positive: Get leaderboard when no mechanics exist
-        response = self.client.get('/mechanics/leaderboard')
+        response = self.client.get('/mechanics/mechanics/leaderboard')
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
         self.assertEqual(data['total_mechanics'], 0)
         self.assertEqual(data['leaderboard'], [])
     
+    @uses_fixtures(['sample_mechanics_with_tickets'])
     def test_get_leaderboard_ordering(self):
         # Positive: Verify leaderboard is ordered by ticket count (descending)
-        response = self.client.get('/mechanics/leaderboard')
+        response = self.client.get('/mechanics/mechanics/leaderboard')
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
@@ -227,9 +232,10 @@ class TestMechanicsGetLeaderboard(APITestCase):
                     leaderboard[i + 1]['tickets_completed']
                 )
     
+    @uses_fixtures(['sample_mechanics_with_tickets'])
     def test_get_leaderboard_includes_ticket_count(self):
         # Positive: Leaderboard entries include ticket_completed field
-        response = self.client.get('/mechanics/leaderboard')
+        response = self.client.get('/mechanics/mechanics/leaderboard')
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
@@ -242,6 +248,7 @@ class TestMechanicsGetLeaderboard(APITestCase):
 class TestMechanicsPut(APITestCase):
     # Tests for PUT /mechanics/<id> - Update mechanic
     
+    @uses_fixtures(['sample_mechanics'])
     def test_update_mechanic_success(self):
         # Positive: Update existing mechanic
         payload = {
@@ -250,7 +257,7 @@ class TestMechanicsPut(APITestCase):
             'phone_number': '555-5555',
             'salary': 55000
         }
-        response = self.client.put('/mechanics/1', json=payload)
+        response = self.client.put('/mechanics/mechanics/1', json=payload)
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
@@ -265,10 +272,11 @@ class TestMechanicsPut(APITestCase):
             'phone_number': '555-5555',
             'salary': 55000
         }
-        response = self.client.put('/mechanics/9999', json=payload)
+        response = self.client.put('/mechanics/mechanics/9999', json=payload)
         
         self.assertIn(response.status_code, [404, 500])
     
+    @uses_fixtures(['sample_mechanics'])
     def test_update_mechanic_missing_name(self):
         # Negative: Update without required 'name' field
         payload = {
@@ -276,10 +284,11 @@ class TestMechanicsPut(APITestCase):
             'phone_number': '555-5555',
             'salary': 55000
         }
-        response = self.client.put('/mechanics/1', json=payload)
+        response = self.client.put('/mechanics/mechanics/1', json=payload)
         
         self.assertIn(response.status_code, [400, 500])
     
+    @uses_fixtures(['sample_mechanics'])
     def test_update_mechanic_missing_email(self):
         # Negative: Update without required 'email' field
         payload = {
@@ -287,10 +296,11 @@ class TestMechanicsPut(APITestCase):
             'phone_number': '555-5555',
             'salary': 55000
         }
-        response = self.client.put('/mechanics/1', json=payload)
+        response = self.client.put('/mechanics/mechanics/1', json=payload)
         
         self.assertIn(response.status_code, [400, 500])
     
+    @uses_fixtures(['sample_mechanics'])
     def test_update_mechanic_missing_phone(self):
         # Negative: Update without required 'phone_number' field
         payload = {
@@ -298,10 +308,11 @@ class TestMechanicsPut(APITestCase):
             'email': 'robert@example.com',
             'salary': 55000
         }
-        response = self.client.put('/mechanics/1', json=payload)
+        response = self.client.put('/mechanics/mechanics/1', json=payload)
         
         self.assertIn(response.status_code, [400, 500])
     
+    @uses_fixtures(['sample_mechanics'])
     def test_update_mechanic_missing_salary(self):
         # Negative: Update without required 'salary' field
         payload = {
@@ -309,16 +320,18 @@ class TestMechanicsPut(APITestCase):
             'email': 'robert@example.com',
             'phone_number': '555-5555'
         }
-        response = self.client.put('/mechanics/1', json=payload)
+        response = self.client.put('/mechanics/mechanics/1', json=payload)
         
         self.assertIn(response.status_code, [400, 500])
     
+    @uses_fixtures(['sample_mechanics'])
     def test_update_mechanic_no_json(self):
         # Negative: Update with no JSON body
-        response = self.client.put('/mechanics/1')
+        response = self.client.put('/mechanics/mechanics/1')
         
         self.assertIn(response.status_code, [400, 500])
     
+    @uses_fixtures(['sample_mechanics'])
     def test_update_mechanic_invalid_salary_type(self):
         # Negative: Salary is non-numeric
         payload = {
@@ -327,7 +340,7 @@ class TestMechanicsPut(APITestCase):
             'phone_number': '555-5555',
             'salary': 'not_a_number'
         }
-        response = self.client.put('/mechanics/1', json=payload)
+        response = self.client.put('/mechanics/mechanics/1', json=payload)
         
         self.assertIn(response.status_code, [400, 500])
 
@@ -335,39 +348,44 @@ class TestMechanicsPut(APITestCase):
 class TestMechanicsDelete(APITestCase):
     # Tests for DELETE /mechanics/<id> - Delete mechanic
     
+    @uses_fixtures(['sample_mechanics', 'auth_token'])
     def test_delete_mechanic_success(self):
         # Positive: Delete existing mechanic with valid token
         response = self.client.delete(
-            '/mechanics/1',
+            '/mechanics/mechanics/1',
             headers={'Authorization': f'Bearer {self.auth_token}'}
         )
         
         self.assertEqual(response.status_code, 204)
     
+    @uses_fixtures(['auth_token'])
     def test_delete_mechanic_nonexistent_id(self):
         # Negative: Delete non-existent mechanic
         response = self.client.delete(
-            '/mechanics/9999',
+            '/mechanics/mechanics/9999',
             headers={'Authorization': f'Bearer {self.auth_token}'}
         )
         
         self.assertIn(response.status_code, [404, 500])
     
+    @uses_fixtures(['sample_mechanics'])
     def test_delete_mechanic_no_token(self):
         # Negative: Delete without authentication token
-        response = self.client.delete('/mechanics/1')
+        response = self.client.delete('/mechanics/mechanics/1')
         
         self.assertEqual(response.status_code, 401)
     
+    @uses_fixtures(['sample_mechanics'])
     def test_delete_mechanic_invalid_token(self):
         # Negative: Delete with invalid token
         response = self.client.delete(
-            '/mechanics/1',
+            '/mechanics/mechanics/1',
             headers={'Authorization': 'Bearer invalid_token'}
         )
         
         self.assertEqual(response.status_code, 401)
     
+    @uses_fixtures(['sample_mechanics', 'auth_token'])
     def test_delete_mechanic_rate_limit(self):
         # Negative: Exceed rate limit on delete (3 per hour)
         for i in range(4):
@@ -377,28 +395,30 @@ class TestMechanicsDelete(APITestCase):
                 'phone_number': '555-0000',
                 'salary': 50000
             }
-            self.client.post('/mechanics', json=create_payload)
+            self.client.post('/mechanics/mechanics', json=create_payload)
             
             response = self.client.delete(
-                f'/mechanics/{i+1}',
+                f'/mechanics/mechanics/{i+1}',
                 headers={'Authorization': f'Bearer {self.auth_token}'}
             )
 
         self.assertEqual(response.status_code, 429)
     
+    @uses_fixtures(['sample_mechanics', 'expired_token'])
     def test_delete_mechanic_expired_token(self):
         # Negative: Delete with expired token
         response = self.client.delete(
-            '/mechanics/1',
+            '/mechanics/mechanics/1',
             headers={'Authorization': f'Bearer {self.expired_token}'}
         )
         
         self.assertEqual(response.status_code, 401)
     
+    @uses_fixtures(['sample_mechanics'])
     def test_delete_mechanic_malformed_auth_header(self):
         # Negative: Delete with malformed Authorization header
         response = self.client.delete(
-            '/mechanics/1',
+            '/mechanics/mechanics/1',
             headers={'Authorization': 'InvalidFormat'}
         )
         

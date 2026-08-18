@@ -2,7 +2,7 @@ import unittest
 import json
 
 
-from test_base import APITestCase
+from test_base import APITestCase, uses_fixtures
 
 class TestInventoryPost(APITestCase):
     # Tests for POST /inventory - Create inventory item
@@ -13,7 +13,7 @@ class TestInventoryPost(APITestCase):
             'name': 'Oil Filter',
             'price': 15.99
         }
-        response = self.client.post('/inventory', json=payload)
+        response = self.client.post('/inventory/inventory', json=payload)
         
         self.assertEqual(response.status_code, 201)
         data = json.loads(response.data)
@@ -25,7 +25,7 @@ class TestInventoryPost(APITestCase):
         payload = {
             'price': 15.99
         }
-        response = self.client.post('/inventory', json=payload)
+        response = self.client.post('/inventory/inventory', json=payload)
         
         self.assertEqual(response.status_code, 400)
         data = json.loads(response.data)
@@ -36,7 +36,7 @@ class TestInventoryPost(APITestCase):
         payload = {
             'name': 'Oil Filter'
         }
-        response = self.client.post('/inventory', json=payload)
+        response = self.client.post('/inventory/inventory', json=payload)
         
         self.assertEqual(response.status_code, 400)
         data = json.loads(response.data)
@@ -48,7 +48,7 @@ class TestInventoryPost(APITestCase):
             'name': 'Oil Filter',
             'price': 'not_a_number'
         }
-        response = self.client.post('/inventory', json=payload)
+        response = self.client.post('/inventory/inventory', json=payload)
         
         self.assertEqual(response.status_code, 400)
         data = json.loads(response.data)
@@ -60,7 +60,7 @@ class TestInventoryPost(APITestCase):
             'name': 'Oil Filter',
             'price': -15.99
         }
-        response = self.client.post('/inventory', json=payload)
+        response = self.client.post('/inventory/inventory', json=payload)
 
         self.assertIn(response.status_code, [201, 400])
     
@@ -70,7 +70,7 @@ class TestInventoryPost(APITestCase):
             'name': 'Oil Filter',
             'price': 0
         }
-        response = self.client.post('/inventory', json=payload)
+        response = self.client.post('/inventory/inventory', json=payload)
 
         self.assertIn(response.status_code, [201, 400])
     
@@ -80,13 +80,13 @@ class TestInventoryPost(APITestCase):
             'name': '',
             'price': 15.99
         }
-        response = self.client.post('/inventory', json=payload)
+        response = self.client.post('/inventory/inventory', json=payload)
         
         self.assertIn(response.status_code, [400, 201])
     
     def test_create_inventory_no_json(self):
         # Negative: No JSON payload
-        response = self.client.post('/inventory')
+        response = self.client.post('/inventory/inventory')
         
         self.assertIn(response.status_code, [400, 500])
     
@@ -96,7 +96,7 @@ class TestInventoryPost(APITestCase):
             'name': 'Premium Component',
             'price': 9999.99
         }
-        response = self.client.post('/inventory', json=payload)
+        response = self.client.post('/inventory/inventory', json=payload)
         
         self.assertEqual(response.status_code, 201)
         data = json.loads(response.data)
@@ -106,9 +106,10 @@ class TestInventoryPost(APITestCase):
 class TestInventoryGetAll(APITestCase):
     # Tests for GET /inventory - Get all inventory items
     
+    @uses_fixtures(['sample_inventory'])
     def test_get_all_inventory_success(self):
         # Positive: Retrieve all inventory items
-        response = self.client.get('/inventory')
+        response = self.client.get('/inventory/inventory')
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
@@ -116,16 +117,17 @@ class TestInventoryGetAll(APITestCase):
     
     def test_get_all_inventory_empty(self):
         # Positive: Get inventory when none exist
-        response = self.client.get('/inventory')
+        response = self.client.get('/inventory/inventory')
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
         self.assertIsInstance(data, list)
         self.assertEqual(len(data), 0)
     
+    @uses_fixtures(['sample_inventory'])
     def test_get_all_inventory_correct_fields(self):
         # Positive: Returned items have correct fields
-        response = self.client.get('/inventory')
+        response = self.client.get('/inventory/inventory')
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
@@ -145,9 +147,9 @@ class TestInventoryGetAll(APITestCase):
         ]
         
         for item in items:
-            self.client.post('/inventory', json=item)
+            self.client.post('/inventory/inventory', json=item)
         
-        response = self.client.get('/inventory')
+        response = self.client.get('/inventory/inventory')
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
@@ -157,9 +159,10 @@ class TestInventoryGetAll(APITestCase):
 class TestInventoryGetById(APITestCase):
     # Tests for GET /inventory/<id> - Get single inventory item
     
+    @uses_fixtures(['sample_inventory'])
     def test_get_inventory_by_id_success(self):
         # Positive: Retrieve existing inventory item by ID
-        response = self.client.get('/inventory/1')
+        response = self.client.get('/inventory/inventory/1')
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
@@ -167,7 +170,7 @@ class TestInventoryGetById(APITestCase):
     
     def test_get_inventory_nonexistent_id(self):
         # Negative: Retrieve non-existent inventory item
-        response = self.client.get('/inventory/9999')
+        response = self.client.get('/inventory/inventory/9999')
         
         self.assertEqual(response.status_code, 404)
         data = json.loads(response.data)
@@ -175,19 +178,19 @@ class TestInventoryGetById(APITestCase):
     
     def test_get_inventory_invalid_id_format(self):
         # Negative: Invalid ID format (non-numeric)
-        response = self.client.get('/inventory/abc')
+        response = self.client.get('/inventory/inventory/abc')
         
         self.assertEqual(response.status_code, 404)
     
     def test_get_inventory_negative_id(self):
         # Negative: Request with negative ID
-        response = self.client.get('/inventory/-1')
+        response = self.client.get('/inventory/inventory/-1')
         
         self.assertIn(response.status_code, [404, 400])
     
     def test_get_inventory_zero_id(self):
         # Negative: Request with ID of 0
-        response = self.client.get('/inventory/0')
+        response = self.client.get('/inventory/inventory/0')
         
         self.assertIn(response.status_code, [404, 400])
 
@@ -195,13 +198,14 @@ class TestInventoryGetById(APITestCase):
 class TestInventoryPut(APITestCase):
     # Tests for PUT /inventory/<id> - Update inventory item
     
+    @uses_fixtures(['sample_inventory'])
     def test_update_inventory_success(self):
         # Positive: Update existing inventory item
         payload = {
             'name': 'Premium Oil Filter',
             'price': 24.99
         }
-        response = self.client.put('/inventory/1', json=payload)
+        response = self.client.put('/inventory/inventory/1', json=payload)
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
@@ -214,64 +218,70 @@ class TestInventoryPut(APITestCase):
             'name': 'Premium Oil Filter',
             'price': 24.99
         }
-        response = self.client.put('/inventory/9999', json=payload)
+        response = self.client.put('/inventory/inventory/9999', json=payload)
         
         self.assertEqual(response.status_code, 404)
     
+    @uses_fixtures(['sample_inventory'])
     def test_update_inventory_name_only(self):
         # Positive: Update only the name field
         payload = {
             'name': 'Premium Oil Filter'
         }
-        response = self.client.put('/inventory/1', json=payload)
+        response = self.client.put('/inventory/inventory/1', json=payload)
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
         self.assertEqual(data['name'], 'Premium Oil Filter')
     
+    @uses_fixtures(['sample_inventory'])
     def test_update_inventory_price_only(self):
         # Positive: Update only the price field
         payload = {
             'price': 24.99
         }
-        response = self.client.put('/inventory/1', json=payload)
+        response = self.client.put('/inventory/inventory/1', json=payload)
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
         self.assertEqual(data['price'], 24.99)
     
+    @uses_fixtures(['sample_inventory'])
     def test_update_inventory_invalid_price(self):
         # Negative: Update with non-numeric price
         payload = {
             'price': 'not_a_number'
         }
-        response = self.client.put('/inventory/1', json=payload)
+        response = self.client.put('/inventory/inventory/1', json=payload)
         
         self.assertEqual(response.status_code, 400)
         data = json.loads(response.data)
         self.assertIn('valid number', data['message'].lower())
     
+    @uses_fixtures(['sample_inventory'])
     def test_update_inventory_negative_price(self):
         # Negative: Update with negative price
         payload = {
             'price': -24.99
         }
-        response = self.client.put('/inventory/1', json=payload)
+        response = self.client.put('/inventory/inventory/1', json=payload)
         
         self.assertIn(response.status_code, [200, 400])
     
+    @uses_fixtures(['sample_inventory'])
     def test_update_inventory_no_json(self):
         # Negative: Update with no JSON body
-        response = self.client.put('/inventory/1')
+        response = self.client.put('/inventory/inventory/1')
         
         self.assertIn(response.status_code, [400, 500])
     
+    @uses_fixtures(['sample_inventory'])
     def test_update_inventory_empty_name(self):
         # Negative: Update with empty name
         payload = {
             'name': ''
         }
-        response = self.client.put('/inventory/1', json=payload)
+        response = self.client.put('/inventory/inventory/1', json=payload)
         
         self.assertIn(response.status_code, [200, 400])
 
@@ -279,10 +289,11 @@ class TestInventoryPut(APITestCase):
 class TestInventoryDelete(APITestCase):
     # Tests for DELETE /inventory/<id> - Delete inventory item
     
+    @uses_fixtures(['sample_inventory', 'auth_token'])
     def test_delete_inventory_success(self):
         # Positive: Delete existing inventory item with valid token
         response = self.client.delete(
-            '/inventory/1',
+            '/inventory/inventory/1',
             headers={'Authorization': f'Bearer {self.auth_token}'}
         )
         
@@ -290,25 +301,28 @@ class TestInventoryDelete(APITestCase):
         data = json.loads(response.data)
         self.assertIn('deleted successfully', data['message'].lower())
     
+    @uses_fixtures(['auth_token'])
     def test_delete_inventory_nonexistent_id(self):
         # Negative: Delete non-existent inventory item
         response = self.client.delete(
-            '/inventory/9999',
+            '/inventory/inventory/9999',
             headers={'Authorization': f'Bearer {self.auth_token}'}
         )
         
         self.assertEqual(response.status_code, 404)
     
+    @uses_fixtures(['sample_inventory'])
     def test_delete_inventory_no_token(self):
         # Negative: Delete without authentication token
-        response = self.client.delete('/inventory/1')
+        response = self.client.delete('/inventory/inventory/1')
         
         self.assertEqual(response.status_code, 401)
     
+    @uses_fixtures(['sample_inventory'])
     def test_delete_inventory_invalid_token(self):
         # Negative: Delete with invalid token
         response = self.client.delete(
-            '/inventory/1',
+            '/inventory/inventory/1',
             headers={'Authorization': 'Bearer invalid_token'}
         )
         
@@ -318,6 +332,7 @@ class TestInventoryDelete(APITestCase):
 class TestAddPartToTicket(APITestCase):
     # Tests for POST /inventory/service-tickets/<ticket_id>/add-part
     
+    @uses_fixtures(['sample_tickets', 'sample_inventory', 'auth_token'])
     def test_add_part_to_ticket_success(self):
         # Positive: Add part to ticket with valid data
         payload = {
@@ -325,7 +340,7 @@ class TestAddPartToTicket(APITestCase):
             'quantity': 2
         }
         response = self.client.post(
-            '/inventory/service-tickets/1/add-part',
+            '/inventory/inventory/service-tickets/1/add-part',
             json=payload,
             headers={'Authorization': f'Bearer {self.auth_token}'}
         )
@@ -335,13 +350,14 @@ class TestAddPartToTicket(APITestCase):
         self.assertEqual(data['status'], 'success')
         self.assertEqual(data['quantity'], 2)
     
+    @uses_fixtures(['sample_tickets'])
     def test_add_part_to_ticket_missing_inventory_id(self):
         # Negative: Missing inventory_id
         payload = {
             'quantity': 2
         }
         response = self.client.post(
-            '/inventory/service-tickets/1/add-part',
+            '/inventory/inventory/service-tickets/1/add-part',
             json=payload
         )
         
@@ -349,6 +365,7 @@ class TestAddPartToTicket(APITestCase):
         data = json.loads(response.data)
         self.assertIn('inventory_id', data['message'])
     
+    @uses_fixtures(['sample_tickets'])
     def test_add_part_to_ticket_invalid_inventory_id(self):
         # Negative: Non-existent inventory item
         payload = {
@@ -356,7 +373,7 @@ class TestAddPartToTicket(APITestCase):
             'quantity': 2
         }
         response = self.client.post(
-            '/inventory/service-tickets/1/add-part',
+            '/inventory/inventory/service-tickets/1/add-part',
             json=payload
         )
         
@@ -364,6 +381,7 @@ class TestAddPartToTicket(APITestCase):
         data = json.loads(response.data)
         self.assertIn('not found', data['message'].lower())
     
+    @uses_fixtures(['sample_inventory'])
     def test_add_part_to_ticket_invalid_ticket_id(self):
         # Negative: Non-existent ticket
         payload = {
@@ -371,7 +389,7 @@ class TestAddPartToTicket(APITestCase):
             'quantity': 2
         }
         response = self.client.post(
-            '/inventory/service-tickets/9999/add-part',
+            '/inventory/inventory/service-tickets/9999/add-part',
             json=payload
         )
         
@@ -379,6 +397,7 @@ class TestAddPartToTicket(APITestCase):
         data = json.loads(response.data)
         self.assertIn('not found', data['message'].lower())
     
+    @uses_fixtures(['sample_tickets', 'sample_inventory'])
     def test_add_part_to_ticket_invalid_quantity_zero(self):
         # Negative: Quantity is zero
         payload = {
@@ -386,7 +405,7 @@ class TestAddPartToTicket(APITestCase):
             'quantity': 0
         }
         response = self.client.post(
-            '/inventory/service-tickets/1/add-part',
+            '/inventory/inventory/service-tickets/1/add-part',
             json=payload
         )
         
@@ -394,6 +413,7 @@ class TestAddPartToTicket(APITestCase):
         data = json.loads(response.data)
         self.assertIn('positive integer', data['message'].lower())
     
+    @uses_fixtures(['sample_tickets', 'sample_inventory'])
     def test_add_part_to_ticket_invalid_quantity_negative(self):
         # Negative: Quantity is negative
         payload = {
@@ -401,7 +421,7 @@ class TestAddPartToTicket(APITestCase):
             'quantity': -5
         }
         response = self.client.post(
-            '/inventory/service-tickets/1/add-part',
+            '/inventory/inventory/service-tickets/1/add-part',
             json=payload
         )
         
@@ -409,6 +429,7 @@ class TestAddPartToTicket(APITestCase):
         data = json.loads(response.data)
         self.assertIn('positive integer', data['message'].lower())
     
+    @uses_fixtures(['sample_tickets', 'sample_inventory'])
     def test_add_part_to_ticket_invalid_quantity_string(self):
         # Negative: Quantity is non-numeric
         payload = {
@@ -416,19 +437,20 @@ class TestAddPartToTicket(APITestCase):
             'quantity': 'not_a_number'
         }
         response = self.client.post(
-            '/inventory/service-tickets/1/add-part',
+            '/inventory/inventory/service-tickets/1/add-part',
             json=payload
         )
         
         self.assertEqual(response.status_code, 400)
     
+    @uses_fixtures(['sample_tickets', 'sample_inventory'])
     def test_add_part_to_ticket_default_quantity(self):
         # Positive: Quantity defaults to 1 if not provided
         payload = {
             'inventory_id': 1
         }
         response = self.client.post(
-            '/inventory/service-tickets/1/add-part',
+            '/inventory/inventory/service-tickets/1/add-part',
             json=payload
         )
         
@@ -436,16 +458,17 @@ class TestAddPartToTicket(APITestCase):
         data = json.loads(response.data)
         self.assertEqual(data['quantity'], 1)
     
+    @uses_fixtures(['sample_tickets', 'sample_inventory'])
     def test_add_part_to_ticket_update_existing(self):
         # Positive: Adding same part again increments quantity
         payload = {
             'inventory_id': 1,
             'quantity': 2
         }
-        self.client.post('/inventory/service-tickets/1/add-part', json=payload)
+        self.client.post('/inventory/inventory/service-tickets/1/add-part', json=payload)
         
         payload['quantity'] = 3
-        response = self.client.post('/inventory/service-tickets/1/add-part', json=payload)
+        response = self.client.post('/inventory/inventory/service-tickets/1/add-part', json=payload)
         
         self.assertEqual(response.status_code, 201)
         data = json.loads(response.data)
@@ -455,9 +478,10 @@ class TestAddPartToTicket(APITestCase):
 class TestGetTicketParts(APITestCase):
     # Tests for GET /inventory/service-tickets/<ticket_id>/parts
     
+    @uses_fixtures(['sample_tickets_with_parts'])
     def test_get_ticket_parts_success(self):
         # Positive: Get all parts for a ticket
-        response = self.client.get('/inventory/service-tickets/1/parts')
+        response = self.client.get('/inventory/inventory/service-tickets/1/parts')
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
@@ -467,24 +491,26 @@ class TestGetTicketParts(APITestCase):
     
     def test_get_ticket_parts_nonexistent_ticket(self):
         # Negative: Get parts for non-existent ticket
-        response = self.client.get('/inventory/service-tickets/9999/parts')
+        response = self.client.get('/inventory/inventory/service-tickets/9999/parts')
         
         self.assertEqual(response.status_code, 404)
         data = json.loads(response.data)
         self.assertIn('not found', data['message'].lower())
     
+    @uses_fixtures(['sample_tickets'])
     def test_get_ticket_parts_empty(self):
         # Positive: Get parts for ticket with no parts
-        response = self.client.get('/inventory/service-tickets/1/parts')
+        response = self.client.get('/inventory/inventory/service-tickets/1/parts')
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
         self.assertEqual(data['part_count'], 0)
         self.assertEqual(data['parts'], [])
     
+    @uses_fixtures(['sample_tickets_with_parts'])
     def test_get_ticket_parts_includes_total_cost(self):
         # Positive: Parts include calculated total_cost
-        response = self.client.get('/inventory/service-tickets/1/parts')
+        response = self.client.get('/inventory/inventory/service-tickets/1/parts')
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
@@ -498,20 +524,22 @@ class TestGetTicketParts(APITestCase):
 class TestRemovePartFromTicket(APITestCase):
     # Tests for DELETE /inventory/service-tickets/<ticket_id>/parts/<inventory_id>
     
+    @uses_fixtures(['sample_tickets_with_parts'])
     def test_remove_part_from_ticket_success(self):
         # Positive: Remove part from ticket
         response = self.client.delete(
-            '/inventory/service-tickets/1/parts/1'
+            '/inventory/inventory/service-tickets/1/parts/1'
         )
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
         self.assertIn('removed', data['message'].lower())
     
+    @uses_fixtures(['sample_tickets'])
     def test_remove_part_from_ticket_not_on_ticket(self):
         # Negative: Remove part that's not on ticket
         response = self.client.delete(
-            '/inventory/service-tickets/1/parts/99'
+            '/inventory/inventory/service-tickets/1/parts/99'
         )
         
         self.assertEqual(response.status_code, 404)
@@ -521,19 +549,21 @@ class TestRemovePartFromTicket(APITestCase):
     def test_remove_part_from_nonexistent_ticket(self):
         # Negative: Remove part from non-existent ticket
         response = self.client.delete(
-            '/inventory/service-tickets/9999/parts/1'
+            '/inventory/inventory/service-tickets/9999/parts/1'
         )
 
         self.assertIn(response.status_code, [404, 500])
     
+    @uses_fixtures(['sample_tickets_with_parts'])
     def test_remove_part_verify_deletion(self):
         # Positive: Verify part is actually removed
-        get_response = self.client.get('/inventory/service-tickets/1/parts')
+        get_response = self.client.get('/inventory/inventory/service-tickets/1/parts')
         initial_count = json.loads(get_response.data)['part_count']
 
-        self.client.delete('/inventory/service-tickets/1/parts/1')
+        self.client.delete('/inventory/inventory/service-tickets/1/parts/1')
 
-        get_response = self.client.get('/inventory/service-tickets/1/parts')
+        get_response = self.client.get('/inventory/inventory/service-tickets/1/parts')
         final_count = json.loads(get_response.data)['part_count']
         
         self.assertEqual(final_count, initial_count - 1)
+

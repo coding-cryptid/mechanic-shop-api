@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 
 
-from test_base import APITestCase
+from test_base import APITestCase, uses_fixtures
 
 class TestCustomersPost(APITestCase):
     # Tests for POST /customers - Create customer
@@ -15,7 +15,7 @@ class TestCustomersPost(APITestCase):
             'email': 'john@example.com',
             'phone_number': '555-1234'
         }
-        response = self.client.post('/customers', json=payload)
+        response = self.client.post('/customers/', json=payload)
         
         self.assertEqual(response.status_code, 201)
         data = json.loads(response.data)
@@ -29,7 +29,7 @@ class TestCustomersPost(APITestCase):
             'email': 'john@example.com',
             'phone_number': '555-1234'
         }
-        response = self.client.post('/customers', json=payload)
+        response = self.client.post('/customers/', json=payload)
         
         self.assertIn(response.status_code, [400, 500])
     
@@ -39,7 +39,7 @@ class TestCustomersPost(APITestCase):
             'name': 'John Doe',
             'phone_number': '555-1234'
         }
-        response = self.client.post('/customers', json=payload)
+        response = self.client.post('/customers/', json=payload)
         
         self.assertIn(response.status_code, [400, 500])
     
@@ -49,20 +49,20 @@ class TestCustomersPost(APITestCase):
             'name': 'John Doe',
             'email': 'john@example.com'
         }
-        response = self.client.post('/customers', json=payload)
+        response = self.client.post('/customers/', json=payload)
         
         self.assertIn(response.status_code, [400, 500])
     
     def test_create_customer_no_json_payload(self):
         # Negative: Request with no JSON body
-        response = self.client.post('/customers')
+        response = self.client.post('/customers/')
         
         self.assertIn(response.status_code, [400, 500])
     
     def test_create_customer_invalid_json(self):
         # Negative: Request with invalid JSON
         response = self.client.post(
-            '/customers',
+            '/customers/',
             data='invalid json',
             content_type='application/json'
         )
@@ -73,6 +73,7 @@ class TestCustomersPost(APITestCase):
 class TestCustomersGetAll(APITestCase):
     # Tests for GET /customers - Get all customers with pagination
     
+    @uses_fixtures(['sample_customers'])
     def test_get_all_customers_page_one(self):
         # Positive: Get first page of customers
         response = self.client.get('/customers?page=1')
@@ -84,9 +85,10 @@ class TestCustomersGetAll(APITestCase):
         self.assertIn('pagination', data)
         self.assertEqual(data['pagination']['current_page'], 1)
     
+    @uses_fixtures(['sample_customers'])
     def test_get_all_customers_default_page(self):
         # Positive: Get customers without specifying page (defaults to 1)
-        response = self.client.get('/customers')
+        response = self.client.get('/customers/')
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
@@ -106,6 +108,7 @@ class TestCustomersGetAll(APITestCase):
         
         self.assertEqual(response.status_code, 400)
     
+    @uses_fixtures(['sample_customers'])
     def test_get_all_customers_page_out_of_range(self):
         # Negative: Request page that doesn't exist
         response = self.client.get('/customers?page=9999')
@@ -120,6 +123,7 @@ class TestCustomersGetAll(APITestCase):
 
         self.assertIn(response.status_code, [400, 404])
     
+    @uses_fixtures(['sample_customers'])
     def test_get_all_customers_pagination_metadata(self):
         # Positive: Verify pagination metadata is correct
         response = self.client.get('/customers?page=1')
@@ -139,6 +143,7 @@ class TestCustomersGetAll(APITestCase):
 class TestCustomersGetById(APITestCase):
     # Tests for GET /customers/<id> - Get single customer
     
+    @uses_fixtures(['sample_customers'])
     def test_get_customer_by_id_success(self):
         # Positive: Retrieve existing customer by ID
         response = self.client.get('/customers/1')
@@ -175,6 +180,7 @@ class TestCustomersGetById(APITestCase):
 class TestCustomersPut(APITestCase):
     # Tests for PUT /customers/<id> - Update customer
     
+    @uses_fixtures(['sample_customers'])
     def test_update_customer_success(self):
         # Positive: Update existing customer
         payload = {
@@ -201,6 +207,7 @@ class TestCustomersPut(APITestCase):
         
         self.assertIn(response.status_code, [404, 500])
     
+    @uses_fixtures(['sample_customers'])
     def test_update_customer_missing_name(self):
         # Negative: Update without required 'name' field
         payload = {
@@ -211,6 +218,7 @@ class TestCustomersPut(APITestCase):
         
         self.assertIn(response.status_code, [400, 500])
     
+    @uses_fixtures(['sample_customers'])
     def test_update_customer_missing_email(self):
         # Negative: Update without required 'email' field
         payload = {
@@ -221,6 +229,7 @@ class TestCustomersPut(APITestCase):
         
         self.assertIn(response.status_code, [400, 500])
     
+    @uses_fixtures(['sample_customers'])
     def test_update_customer_missing_phone(self):
         # Negative: Update without required 'phone_number' field
         payload = {
@@ -231,12 +240,14 @@ class TestCustomersPut(APITestCase):
         
         self.assertIn(response.status_code, [400, 500])
     
+    @uses_fixtures(['sample_customers'])
     def test_update_customer_no_json(self):
         # Negative: Update with no JSON body
         response = self.client.put('/customers/1')
         
         self.assertIn(response.status_code, [400, 500])
     
+    @uses_fixtures(['sample_customers'])
     def test_update_customer_partial_fields(self):
         # Negative: Update with incomplete field set
         payload = {
@@ -250,6 +261,7 @@ class TestCustomersPut(APITestCase):
 class TestCustomersDelete(APITestCase):
     # Tests for DELETE /customers/<id> - Delete customer
     
+    @uses_fixtures(['sample_customers', 'auth_token'])
     def test_delete_customer_success(self):
         # Positive: Delete existing customer with valid token
         response = self.client.delete(
@@ -259,6 +271,7 @@ class TestCustomersDelete(APITestCase):
         
         self.assertEqual(response.status_code, 204)
     
+    @uses_fixtures(['auth_token'])
     def test_delete_customer_nonexistent_id(self):
         # Negative: Delete non-existent customer
         response = self.client.delete(
@@ -268,12 +281,14 @@ class TestCustomersDelete(APITestCase):
         
         self.assertIn(response.status_code, [404, 500])
     
+    @uses_fixtures(['sample_customers'])
     def test_delete_customer_no_token(self):
         # Negative: Delete without authentication token
         response = self.client.delete('/customers/1')
         
         self.assertEqual(response.status_code, 401)
     
+    @uses_fixtures(['sample_customers'])
     def test_delete_customer_invalid_token(self):
         # Negative: Delete with invalid token
         response = self.client.delete(
@@ -283,6 +298,7 @@ class TestCustomersDelete(APITestCase):
         
         self.assertEqual(response.status_code, 401)
     
+    @uses_fixtures(['sample_customers', 'expired_token'])
     def test_delete_customer_expired_token(self):
         # Negative: Delete with expired token
         response = self.client.delete(
@@ -292,6 +308,7 @@ class TestCustomersDelete(APITestCase):
         
         self.assertEqual(response.status_code, 401)
     
+    @uses_fixtures(['sample_customers'])
     def test_delete_customer_malformed_auth_header(self):
         # Negative: Delete with malformed Authorization header
         response = self.client.delete(

@@ -2,12 +2,12 @@ import unittest
 import json
 from werkzeug.security import generate_password_hash
 
-
-from test_base import APITestCase
+from test_base import APITestCase, uses_fixtures
 
 class TestUsersLogin(APITestCase):
     # Tests for POST /users/login - User authentication
     
+    @uses_fixtures(['sample_users'])
     def test_login_success(self):
         # Positive: Login with valid credentials
         payload = {
@@ -21,6 +21,7 @@ class TestUsersLogin(APITestCase):
         self.assertEqual(data['status'], 'success')
         self.assertIn('auth_token', data)
     
+    @uses_fixtures(['sample_users'])
     def test_login_missing_email(self):
         # Negative: Login without email
         payload = {
@@ -35,6 +36,7 @@ class TestUsersLogin(APITestCase):
             'required' in data['message'].lower()
         )
     
+    @uses_fixtures(['sample_users'])
     def test_login_missing_password(self):
         # Negative: Login without password
         payload = {
@@ -49,6 +51,7 @@ class TestUsersLogin(APITestCase):
             'required' in data['message'].lower()
         )
     
+    @uses_fixtures(['sample_users'])
     def test_login_invalid_email(self):
         # Negative: Login with non-existent email
         payload = {
@@ -61,6 +64,7 @@ class TestUsersLogin(APITestCase):
         data = json.loads(response.data)
         self.assertIn('invalid email or password', data['message'].lower())
     
+    @uses_fixtures(['sample_users'])
     def test_login_incorrect_password(self):
         # Negative: Login with incorrect password
         payload = {
@@ -73,6 +77,7 @@ class TestUsersLogin(APITestCase):
         data = json.loads(response.data)
         self.assertIn('invalid email or password', data['message'].lower())
     
+    @uses_fixtures(['sample_users'])
     def test_login_empty_email(self):
         # Negative: Login with empty email
         payload = {
@@ -83,6 +88,7 @@ class TestUsersLogin(APITestCase):
         
         self.assertIn(response.status_code, [400, 401])
     
+    @uses_fixtures(['sample_users'])
     def test_login_empty_password(self):
         # Negative: Login with empty password
         payload = {
@@ -111,6 +117,7 @@ class TestUsersLogin(APITestCase):
         data = json.loads(response.data)
         self.assertIn('expecting json', data['message'].lower())
     
+    @uses_fixtures(['sample_users'])
     def test_login_returns_valid_token_format(self):
         # Positive: Returned token is valid JWT format
         payload = {
@@ -126,6 +133,7 @@ class TestUsersLogin(APITestCase):
         self.assertIsInstance(token, str)
         self.assertEqual(token.count('.'), 2)
     
+    @uses_fixtures(['sample_users'])
     def test_login_case_sensitive_email(self):
         # Negative: Email lookup might be case-sensitive
         payload = {
@@ -136,6 +144,7 @@ class TestUsersLogin(APITestCase):
  
         self.assertIn(response.status_code, [200, 401])
     
+    @uses_fixtures(['sample_users'])
     def test_login_whitespace_in_email(self):
         # Negative: Email with leading/trailing whitespace
         payload = {
@@ -149,6 +158,7 @@ class TestUsersLogin(APITestCase):
 
 class TestUsersDeleteSelf(APITestCase):
     # Tests for DELETE /users/ - Delete authenticated user
+    @uses_fixtures(['sample_users', 'auth_token'])
     def test_delete_user_success(self):
         # Positive: Delete authenticated user
         response = self.client.delete(
@@ -158,12 +168,14 @@ class TestUsersDeleteSelf(APITestCase):
         
         self.assertEqual(response.status_code, 204)
     
+    @uses_fixtures(['sample_users'])
     def test_delete_user_no_token(self):
         # Negative: Delete without authentication token
         response = self.client.delete('/users/')
         
         self.assertEqual(response.status_code, 401)
     
+    @uses_fixtures(['sample_users'])
     def test_delete_user_invalid_token(self):
         # Negative: Delete with invalid token
         response = self.client.delete(
@@ -173,6 +185,7 @@ class TestUsersDeleteSelf(APITestCase):
         
         self.assertEqual(response.status_code, 401)
     
+    @uses_fixtures(['sample_users', 'expired_token'])
     def test_delete_user_expired_token(self):
         # Negative: Delete with expired token
         response = self.client.delete(
@@ -182,6 +195,7 @@ class TestUsersDeleteSelf(APITestCase):
         
         self.assertEqual(response.status_code, 401)
     
+    @uses_fixtures(['sample_users'])
     def test_delete_user_malformed_auth_header(self):
         # Negative: Delete with malformed Authorization header
         response = self.client.delete(
@@ -191,6 +205,7 @@ class TestUsersDeleteSelf(APITestCase):
         
         self.assertEqual(response.status_code, 401)
     
+    @uses_fixtures(['sample_users', 'auth_token'])
     def test_delete_user_missing_bearer_prefix(self):
         # Negative: Authorization header missing 'Bearer' prefix
         response = self.client.delete(
@@ -200,6 +215,7 @@ class TestUsersDeleteSelf(APITestCase):
         
         self.assertEqual(response.status_code, 401)
     
+    @uses_fixtures(['sample_users', 'auth_token'])
     def test_delete_user_verify_deleted(self):
         # Positive: Verify user is actually deleted
         # Delete the user
@@ -221,6 +237,7 @@ class TestUsersDeleteSelf(APITestCase):
 class TestUsersGetMyTickets(APITestCase):
     # Tests for GET /users/my-tickets - Get authenticated user's tickets
     
+    @uses_fixtures(['sample_users', 'sample_customers', 'sample_tickets', 'auth_token'])
     def test_get_my_tickets_success(self):
         # Positive: Get tickets for authenticated user
         response = self.client.get(
@@ -234,12 +251,14 @@ class TestUsersGetMyTickets(APITestCase):
         self.assertIn('tickets', data)
         self.assertIn('count', data)
     
+    @uses_fixtures(['sample_users'])
     def test_get_my_tickets_no_token(self):
         # Negative: Get tickets without authentication token
         response = self.client.get('/users/my-tickets')
         
         self.assertEqual(response.status_code, 401)
     
+    @uses_fixtures(['sample_users'])
     def test_get_my_tickets_invalid_token(self):
         # Negative: Get tickets with invalid token
         response = self.client.get(
@@ -249,6 +268,7 @@ class TestUsersGetMyTickets(APITestCase):
         
         self.assertEqual(response.status_code, 401)
     
+    @uses_fixtures(['sample_users', 'expired_token'])
     def test_get_my_tickets_expired_token(self):
         # Negative: Get tickets with expired token
         response = self.client.get(
@@ -258,6 +278,7 @@ class TestUsersGetMyTickets(APITestCase):
         
         self.assertEqual(response.status_code, 401)
     
+    @uses_fixtures(['sample_users'])
     def test_get_my_tickets_malformed_auth_header(self):
         # Negative: Get tickets with malformed Authorization header
         response = self.client.get(
@@ -267,6 +288,7 @@ class TestUsersGetMyTickets(APITestCase):
         
         self.assertEqual(response.status_code, 401)
     
+    @uses_fixtures(['sample_users', 'sample_customers', 'auth_token'])
     def test_get_my_tickets_empty_tickets(self):
         # Positive: Get tickets when user has no tickets
         response = self.client.get(
@@ -279,6 +301,7 @@ class TestUsersGetMyTickets(APITestCase):
         self.assertEqual(data['count'], 0)
         self.assertEqual(data['tickets'], [])
     
+    @uses_fixtures(['sample_users', 'sample_customers', 'sample_tickets', 'auth_token'])
     def test_get_my_tickets_includes_correct_fields(self):
         # Positive: Returned tickets have correct fields
         response = self.client.get(
@@ -297,6 +320,7 @@ class TestUsersGetMyTickets(APITestCase):
             self.assertIn('service_date', ticket)
             self.assertIn('service_description', ticket)
     
+    @uses_fixtures(['sample_users', 'sample_customers', 'sample_tickets', 'auth_token'])
     def test_get_my_tickets_only_user_tickets(self):
         # Positive: Only returns tickets for logged-in user's customer
         response = self.client.get(
@@ -310,6 +334,7 @@ class TestUsersGetMyTickets(APITestCase):
         for ticket in data['tickets']:
             self.assertIn('customer_id', ticket)
     
+    @uses_fixtures(['sample_users', 'auth_token_no_customer'])
     def test_get_my_tickets_no_customer_account(self):
         # Negative: User doesn't have associated customer account
         response = self.client.get(
@@ -321,6 +346,7 @@ class TestUsersGetMyTickets(APITestCase):
         data = json.loads(response.data)
         self.assertIn('customer account not found', data['message'].lower())
     
+    @uses_fixtures(['sample_users', 'sample_customers', 'sample_tickets', 'auth_token'])
     def test_get_my_tickets_date_format(self):
         # Positive: Returned dates are in ISO format
         response = self.client.get(
@@ -337,6 +363,7 @@ class TestUsersGetMyTickets(APITestCase):
                 self.assertIsInstance(ticket['service_date'], str)
                 self.assertTrue(len(ticket['service_date']) > 0)
     
+    @uses_fixtures(['sample_users', 'sample_customers', 'sample_tickets', 'auth_token'])
     def test_get_my_tickets_count_accuracy(self):
         # Positive: Count field matches actual number of tickets
         response = self.client.get(
@@ -349,6 +376,7 @@ class TestUsersGetMyTickets(APITestCase):
         
         self.assertEqual(data['count'], len(data['tickets']))
     
+    @uses_fixtures(['sample_users', 'auth_token'])
     def test_get_my_tickets_missing_bearer_prefix(self):
         # Negative: Authorization header missing 'Bearer' prefix
         response = self.client.get(
@@ -362,6 +390,7 @@ class TestUsersGetMyTickets(APITestCase):
 class TestAuthenticationIntegration(APITestCase):
     # Integration tests for authentication flow
     
+    @uses_fixtures(['sample_users'])
     def test_login_and_use_token(self):
         # Positive: Login and use returned token to access protected route
         # Login
@@ -380,6 +409,7 @@ class TestAuthenticationIntegration(APITestCase):
         
         self.assertEqual(response.status_code, 204)
     
+    @uses_fixtures(['sample_users'])
     def test_multiple_logins_return_different_tokens(self):
         # Positive: Multiple logins return different tokens
         payload = {
@@ -396,6 +426,7 @@ class TestAuthenticationIntegration(APITestCase):
         self.assertIsInstance(token1, str)
         self.assertIsInstance(token2, str)
     
+    @uses_fixtures(['sample_users', 'sample_customers', 'sample_tickets', 'auth_token'])
     def test_token_persists_across_requests(self):
         # Positive: Same token works across multiple requests
         response1 = self.client.get(
@@ -409,3 +440,4 @@ class TestAuthenticationIntegration(APITestCase):
             headers={'Authorization': f'Bearer {self.auth_token}'}
         )
         self.assertEqual(response2.status_code, 200)
+
