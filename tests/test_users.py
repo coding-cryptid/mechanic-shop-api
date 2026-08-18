@@ -3,7 +3,7 @@ import json
 from werkzeug.security import generate_password_hash
 
 
-from unittest import APITestCase
+from unittest_base import APITestCase
 
 class TestUsersLogin(APITestCase):
     # Tests for POST /users/login - User authentication

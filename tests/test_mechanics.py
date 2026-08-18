@@ -2,7 +2,7 @@ import unittest
 import json
 
 
-from unittest import APITestCase
+from unittest_base import APITestCase
 
 class TestMechanicsPost(APITestCase):
     # Tests for POST /mechanics - Create mechanic
