@@ -2,7 +2,7 @@ import unittest
 import json
 
 
-from unittest import APITestCase
+from unittest_base import APITestCase
 
 class TestInventoryPost(APITestCase):
     # Tests for POST /inventory - Create inventory item
