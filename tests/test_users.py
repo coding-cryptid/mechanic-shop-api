@@ -1,403 +1,411 @@
-import pytest
+import unittest
 import json
 from werkzeug.security import generate_password_hash
 
 
-class TestUsersLogin:
+from unittest_base import APITestCase
+
+class TestUsersLogin(APITestCase):
     # Tests for POST /users/login - User authentication
     
-    def test_login_success(self, client, db, sample_users):
+    def test_login_success(self):
         # Positive: Login with valid credentials
         payload = {
             'email': 'user1@example.com',
             'password': 'password123'
         }
-        response = client.post('/users/login', json=payload)
+        response = self.client.post('/users/login', json=payload)
         
-        assert response.status_code == 200
+        self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
-        assert data['status'] == 'success'
-        assert 'auth_token' in data
+        self.assertEqual(data['status'], 'success')
+        self.assertIn('auth_token', data)
     
-    def test_login_missing_email(self, client, db, sample_users):
+    def test_login_missing_email(self):
         # Negative: Login without email
         payload = {
             'password': 'password123'
         }
-        response = client.post('/users/login', json=payload)
+        response = self.client.post('/users/login', json=payload)
         
-        assert response.status_code == 400
+        self.assertEqual(response.status_code, 400)
         data = json.loads(response.data)
-        assert 'invalid payload' in data['message'].lower() or 'required' in data['message'].lower()
+        self.assertTrue(
+            'invalid payload' in data['message'].lower() or
+            'required' in data['message'].lower()
+        )
     
-    def test_login_missing_password(self, client, db, sample_users):
+    def test_login_missing_password(self):
         # Negative: Login without password
         payload = {
             'email': 'user1@example.com'
         }
-        response = client.post('/users/login', json=payload)
+        response = self.client.post('/users/login', json=payload)
         
-        assert response.status_code == 400
+        self.assertEqual(response.status_code, 400)
         data = json.loads(response.data)
-        assert 'invalid payload' in data['message'].lower() or 'required' in data['message'].lower()
+        self.assertTrue(
+            'invalid payload' in data['message'].lower() or
+            'required' in data['message'].lower()
+        )
     
-    def test_login_invalid_email(self, client, db, sample_users):
+    def test_login_invalid_email(self):
         # Negative: Login with non-existent email
         payload = {
             'email': 'nonexistent@example.com',
             'password': 'password123'
         }
-        response = client.post('/users/login', json=payload)
+        response = self.client.post('/users/login', json=payload)
         
-        assert response.status_code == 401
+        self.assertEqual(response.status_code, 401)
         data = json.loads(response.data)
-        assert 'invalid email or password' in data['message'].lower()
+        self.assertIn('invalid email or password', data['message'].lower())
     
-    def test_login_incorrect_password(self, client, db, sample_users):
+    def test_login_incorrect_password(self):
         # Negative: Login with incorrect password
         payload = {
             'email': 'user1@example.com',
             'password': 'wrongpassword'
         }
-        response = client.post('/users/login', json=payload)
+        response = self.client.post('/users/login', json=payload)
         
-        assert response.status_code == 401
+        self.assertEqual(response.status_code, 401)
         data = json.loads(response.data)
-        assert 'invalid email or password' in data['message'].lower()
+        self.assertIn('invalid email or password', data['message'].lower())
     
-    def test_login_empty_email(self, client, db, sample_users):
+    def test_login_empty_email(self):
         # Negative: Login with empty email
         payload = {
             'email': '',
             'password': 'password123'
         }
-        response = client.post('/users/login', json=payload)
+        response = self.client.post('/users/login', json=payload)
         
-        assert response.status_code in [400, 401]
+        self.assertIn(response.status_code, [400, 401])
     
-    def test_login_empty_password(self, client, db, sample_users):
+    def test_login_empty_password(self):
         # Negative: Login with empty password
         payload = {
             'email': 'user1@example.com',
             'password': ''
         }
-        response = client.post('/users/login', json=payload)
+        response = self.client.post('/users/login', json=payload)
         
-        assert response.status_code in [400, 401]
+        self.assertIn(response.status_code, [400, 401])
     
-    def test_login_no_json(self, client, db):
+    def test_login_no_json(self):
         # Negative: Login without JSON payload
-        response = client.post('/users/login')
+        response = self.client.post('/users/login')
         
-        assert response.status_code == 400
+        self.assertEqual(response.status_code, 400)
     
-    def test_login_invalid_json(self, client, db):
+    def test_login_invalid_json(self):
         # Negative: Login with invalid JSON
-        response = client.post(
+        response = self.client.post(
             '/users/login',
             data='invalid json',
             content_type='application/json'
         )
         
-        assert response.status_code == 400
+        self.assertEqual(response.status_code, 400)
         data = json.loads(response.data)
-        assert 'expecting json' in data['message'].lower()
+        self.assertIn('expecting json', data['message'].lower())
     
-    def test_login_returns_valid_token_format(self, client, db, sample_users):
+    def test_login_returns_valid_token_format(self):
         # Positive: Returned token is valid JWT format
         payload = {
             'email': 'user1@example.com',
             'password': 'password123'
         }
-        response = client.post('/users/login', json=payload)
+        response = self.client.post('/users/login', json=payload)
         
-        assert response.status_code == 200
+        self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
         token = data['auth_token']
 
-        assert isinstance(token, str)
-        assert token.count('.') == 2
+        self.assertIsInstance(token, str)
+        self.assertEqual(token.count('.'), 2)
     
-    def test_login_case_sensitive_email(self, client, db, sample_users):
+    def test_login_case_sensitive_email(self):
         # Negative: Email lookup might be case-sensitive
         payload = {
             'email': 'USER1@EXAMPLE.COM',
             'password': 'password123'
         }
-        response = client.post('/users/login', json=payload)
+        response = self.client.post('/users/login', json=payload)
  
-        assert response.status_code in [200, 401]
+        self.assertIn(response.status_code, [200, 401])
     
-    def test_login_whitespace_in_email(self, client, db, sample_users):
+    def test_login_whitespace_in_email(self):
         # Negative: Email with leading/trailing whitespace
         payload = {
             'email': '  user1@example.com  ',
             'password': 'password123'
         }
-        response = client.post('/users/login', json=payload)
+        response = self.client.post('/users/login', json=payload)
 
-        assert response.status_code in [200, 401]
+        self.assertIn(response.status_code, [200, 401])
 
 
-class TestUsersDeleteSelf:
+class TestUsersDeleteSelf(APITestCase):
     # Tests for DELETE /users/ - Delete authenticated user
-    def test_delete_user_success(self, client, db, sample_users, auth_token):
+    def test_delete_user_success(self):
         # Positive: Delete authenticated user
-        response = client.delete(
+        response = self.client.delete(
             '/users/',
-            headers={'Authorization': f'Bearer {auth_token}'}
+            headers={'Authorization': f'Bearer {self.auth_token}'}
         )
         
-        assert response.status_code == 204
+        self.assertEqual(response.status_code, 204)
     
-    def test_delete_user_no_token(self, client, db, sample_users):
+    def test_delete_user_no_token(self):
         # Negative: Delete without authentication token
-        response = client.delete('/users/')
+        response = self.client.delete('/users/')
         
-        assert response.status_code == 401
+        self.assertEqual(response.status_code, 401)
     
-    def test_delete_user_invalid_token(self, client, db, sample_users):
+    def test_delete_user_invalid_token(self):
         # Negative: Delete with invalid token
-        response = client.delete(
+        response = self.client.delete(
             '/users/',
             headers={'Authorization': 'Bearer invalid_token'}
         )
         
-        assert response.status_code == 401
+        self.assertEqual(response.status_code, 401)
     
-    def test_delete_user_expired_token(self, client, db, sample_users, expired_token):
+    def test_delete_user_expired_token(self):
         # Negative: Delete with expired token
-        response = client.delete(
+        response = self.client.delete(
             '/users/',
-            headers={'Authorization': f'Bearer {expired_token}'}
+            headers={'Authorization': f'Bearer {self.expired_token}'}
         )
         
-        assert response.status_code == 401
+        self.assertEqual(response.status_code, 401)
     
-    def test_delete_user_malformed_auth_header(self, client, db, sample_users):
+    def test_delete_user_malformed_auth_header(self):
         # Negative: Delete with malformed Authorization header
-        response = client.delete(
+        response = self.client.delete(
             '/users/',
             headers={'Authorization': 'InvalidFormat'}
         )
         
-        assert response.status_code == 401
+        self.assertEqual(response.status_code, 401)
     
-    def test_delete_user_missing_bearer_prefix(self, client, db, sample_users, auth_token):
+    def test_delete_user_missing_bearer_prefix(self):
         # Negative: Authorization header missing 'Bearer' prefix
-        response = client.delete(
+        response = self.client.delete(
             '/users/',
-            headers={'Authorization': auth_token}
+            headers={'Authorization': self.auth_token}
         )
         
-        assert response.status_code == 401
+        self.assertEqual(response.status_code, 401)
     
-    def test_delete_user_verify_deleted(self, client, db, sample_users, auth_token):
+    def test_delete_user_verify_deleted(self):
         # Positive: Verify user is actually deleted
         # Delete the user
-        response = client.delete(
+        response = self.client.delete(
             '/users/',
-            headers={'Authorization': f'Bearer {auth_token}'}
+            headers={'Authorization': f'Bearer {self.auth_token}'}
         )
-        assert response.status_code == 204
+        self.assertEqual(response.status_code, 204)
 
         login_payload = {
             'email': 'user1@example.com',
             'password': 'password123'
         }
-        response = client.post('/users/login', json=login_payload)
+        response = self.client.post('/users/login', json=login_payload)
         
-        assert response.status_code == 401
+        self.assertEqual(response.status_code, 401)
 
 
-class TestUsersGetMyTickets:
+class TestUsersGetMyTickets(APITestCase):
     # Tests for GET /users/my-tickets - Get authenticated user's tickets
     
-    def test_get_my_tickets_success(self, client, db, sample_users, sample_customers, sample_tickets, auth_token):
+    def test_get_my_tickets_success(self):
         # Positive: Get tickets for authenticated user
-        response = client.get(
+        response = self.client.get(
             '/users/my-tickets',
-            headers={'Authorization': f'Bearer {auth_token}'}
+            headers={'Authorization': f'Bearer {self.auth_token}'}
         )
         
-        assert response.status_code == 200
+        self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
-        assert data['status'] == 'success'
-        assert 'tickets' in data
-        assert 'count' in data
+        self.assertEqual(data['status'], 'success')
+        self.assertIn('tickets', data)
+        self.assertIn('count', data)
     
-    def test_get_my_tickets_no_token(self, client, db, sample_users):
+    def test_get_my_tickets_no_token(self):
         # Negative: Get tickets without authentication token
-        response = client.get('/users/my-tickets')
+        response = self.client.get('/users/my-tickets')
         
-        assert response.status_code == 401
+        self.assertEqual(response.status_code, 401)
     
-    def test_get_my_tickets_invalid_token(self, client, db, sample_users):
+    def test_get_my_tickets_invalid_token(self):
         # Negative: Get tickets with invalid token
-        response = client.get(
+        response = self.client.get(
             '/users/my-tickets',
             headers={'Authorization': 'Bearer invalid_token'}
         )
         
-        assert response.status_code == 401
+        self.assertEqual(response.status_code, 401)
     
-    def test_get_my_tickets_expired_token(self, client, db, sample_users, expired_token):
+    def test_get_my_tickets_expired_token(self):
         # Negative: Get tickets with expired token
-        response = client.get(
+        response = self.client.get(
             '/users/my-tickets',
-            headers={'Authorization': f'Bearer {expired_token}'}
+            headers={'Authorization': f'Bearer {self.expired_token}'}
         )
         
-        assert response.status_code == 401
+        self.assertEqual(response.status_code, 401)
     
-    def test_get_my_tickets_malformed_auth_header(self, client, db, sample_users):
+    def test_get_my_tickets_malformed_auth_header(self):
         # Negative: Get tickets with malformed Authorization header
-        response = client.get(
+        response = self.client.get(
             '/users/my-tickets',
             headers={'Authorization': 'InvalidFormat'}
         )
         
-        assert response.status_code == 401
+        self.assertEqual(response.status_code, 401)
     
-    def test_get_my_tickets_empty_tickets(self, client, db, sample_users, sample_customers, auth_token):
+    def test_get_my_tickets_empty_tickets(self):
         # Positive: Get tickets when user has no tickets
-        response = client.get(
+        response = self.client.get(
             '/users/my-tickets',
-            headers={'Authorization': f'Bearer {auth_token}'}
+            headers={'Authorization': f'Bearer {self.auth_token}'}
         )
         
-        assert response.status_code == 200
+        self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
-        assert data['count'] == 0
-        assert data['tickets'] == []
+        self.assertEqual(data['count'], 0)
+        self.assertEqual(data['tickets'], [])
     
-    def test_get_my_tickets_includes_correct_fields(self, client, db, sample_users, sample_customers, sample_tickets, auth_token):
+    def test_get_my_tickets_includes_correct_fields(self):
         # Positive: Returned tickets have correct fields
-        response = client.get(
+        response = self.client.get(
             '/users/my-tickets',
-            headers={'Authorization': f'Bearer {auth_token}'}
+            headers={'Authorization': f'Bearer {self.auth_token}'}
         )
         
-        assert response.status_code == 200
+        self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
         
         if len(data['tickets']) > 0:
             ticket = data['tickets'][0]
-            assert 'id' in ticket
-            assert 'customer_id' in ticket
-            assert 'vin' in ticket
-            assert 'service_date' in ticket
-            assert 'service_description' in ticket
+            self.assertIn('id', ticket)
+            self.assertIn('customer_id', ticket)
+            self.assertIn('vin', ticket)
+            self.assertIn('service_date', ticket)
+            self.assertIn('service_description', ticket)
     
-    def test_get_my_tickets_only_user_tickets(self, client, db, sample_users, sample_customers, sample_tickets, auth_token):
+    def test_get_my_tickets_only_user_tickets(self):
         # Positive: Only returns tickets for logged-in user's customer
-        response = client.get(
+        response = self.client.get(
             '/users/my-tickets',
-            headers={'Authorization': f'Bearer {auth_token}'}
+            headers={'Authorization': f'Bearer {self.auth_token}'}
         )
         
-        assert response.status_code == 200
+        self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
 
         for ticket in data['tickets']:
-            assert 'customer_id' in ticket
+            self.assertIn('customer_id', ticket)
     
-    def test_get_my_tickets_no_customer_account(self, client, db, sample_users, auth_token_no_customer):
+    def test_get_my_tickets_no_customer_account(self):
         # Negative: User doesn't have associated customer account
-        response = client.get(
+        response = self.client.get(
             '/users/my-tickets',
-            headers={'Authorization': f'Bearer {auth_token_no_customer}'}
+            headers={'Authorization': f'Bearer {self.auth_token_no_customer}'}
         )
         
-        assert response.status_code == 404
+        self.assertEqual(response.status_code, 404)
         data = json.loads(response.data)
-        assert 'customer account not found' in data['message'].lower()
+        self.assertIn('customer account not found', data['message'].lower())
     
-    def test_get_my_tickets_date_format(self, client, db, sample_users, sample_customers, sample_tickets, auth_token):
+    def test_get_my_tickets_date_format(self):
         # Positive: Returned dates are in ISO format
-        response = client.get(
+        response = self.client.get(
             '/users/my-tickets',
-            headers={'Authorization': f'Bearer {auth_token}'}
+            headers={'Authorization': f'Bearer {self.auth_token}'}
         )
         
-        assert response.status_code == 200
+        self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
         
         if len(data['tickets']) > 0:
             ticket = data['tickets'][0]
             if ticket['service_date']:
-                assert isinstance(ticket['service_date'], str)
-                assert len(ticket['service_date']) > 0
+                self.assertIsInstance(ticket['service_date'], str)
+                self.assertTrue(len(ticket['service_date']) > 0)
     
-    def test_get_my_tickets_count_accuracy(self, client, db, sample_users, sample_customers, sample_tickets, auth_token):
+    def test_get_my_tickets_count_accuracy(self):
         # Positive: Count field matches actual number of tickets
-        response = client.get(
+        response = self.client.get(
             '/users/my-tickets',
-            headers={'Authorization': f'Bearer {auth_token}'}
+            headers={'Authorization': f'Bearer {self.auth_token}'}
         )
         
-        assert response.status_code == 200
+        self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
         
-        assert data['count'] == len(data['tickets'])
+        self.assertEqual(data['count'], len(data['tickets']))
     
-    def test_get_my_tickets_missing_bearer_prefix(self, client, db, sample_users, auth_token):
+    def test_get_my_tickets_missing_bearer_prefix(self):
         # Negative: Authorization header missing 'Bearer' prefix
-        response = client.get(
+        response = self.client.get(
             '/users/my-tickets',
-            headers={'Authorization': auth_token}
+            headers={'Authorization': self.auth_token}
         )
         
-        assert response.status_code == 401
+        self.assertEqual(response.status_code, 401)
 
 
-class TestAuthenticationIntegration:
+class TestAuthenticationIntegration(APITestCase):
     # Integration tests for authentication flow
     
-    def test_login_and_use_token(self, client, db, sample_users):
+    def test_login_and_use_token(self):
         # Positive: Login and use returned token to access protected route
         # Login
         login_payload = {
             'email': 'user1@example.com',
             'password': 'password123'
         }
-        login_response = client.post('/users/login', json=login_payload)
-        assert login_response.status_code == 200
+        login_response = self.client.post('/users/login', json=login_payload)
+        self.assertEqual(login_response.status_code, 200)
         token = json.loads(login_response.data)['auth_token']
 
-        response = client.delete(
+        response = self.client.delete(
             '/users/',
             headers={'Authorization': f'Bearer {token}'}
         )
         
-        assert response.status_code == 204
+        self.assertEqual(response.status_code, 204)
     
-    def test_multiple_logins_return_different_tokens(self, client, db, sample_users):
+    def test_multiple_logins_return_different_tokens(self):
         # Positive: Multiple logins return different tokens
         payload = {
             'email': 'user1@example.com',
             'password': 'password123'
         }
         
-        response1 = client.post('/users/login', json=payload)
+        response1 = self.client.post('/users/login', json=payload)
         token1 = json.loads(response1.data)['auth_token']
         
-        response2 = client.post('/users/login', json=payload)
+        response2 = self.client.post('/users/login', json=payload)
         token2 = json.loads(response2.data)['auth_token']
         
-        assert isinstance(token1, str)
-        assert isinstance(token2, str)
+        self.assertIsInstance(token1, str)
+        self.assertIsInstance(token2, str)
     
-    def test_token_persists_across_requests(self, client, db, sample_users, sample_customers, sample_tickets, auth_token):
+    def test_token_persists_across_requests(self):
         # Positive: Same token works across multiple requests
-        response1 = client.get(
+        response1 = self.client.get(
             '/users/my-tickets',
-            headers={'Authorization': f'Bearer {auth_token}'}
+            headers={'Authorization': f'Bearer {self.auth_token}'}
         )
-        assert response1.status_code == 200
+        self.assertEqual(response1.status_code, 200)
 
-        response2 = client.get(
+        response2 = self.client.get(
             '/users/my-tickets',
-            headers={'Authorization': f'Bearer {auth_token}'}
+            headers={'Authorization': f'Bearer {self.auth_token}'}
         )
-        assert response2.status_code == 200
+        self.assertEqual(response2.status_code, 200)
