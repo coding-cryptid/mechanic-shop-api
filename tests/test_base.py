@@ -1,22 +1,34 @@
 import importlib
 import unittest
 
+try:
+    from flask.testing import FlaskClient
+except ImportError: 
+    FlaskClient = None
+
+
+class RedirectFollowingClient(FlaskClient):
+    def open(self, *args, **kwargs):
+        kwargs.setdefault("follow_redirects", True)
+        return super().open(*args, **kwargs)
+
 
 class APITestCase(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.app = cls._load_app()
         cls.db = cls._load_db()
 
     @staticmethod
     def _load_app():
-        candidates = ("run", "app")
+        errors = []
 
-        for module_name in candidates:
+        for module_name in ("run", "app"):
             try:
                 module = importlib.import_module(module_name)
-            except ImportError:
+            except Exception as exc:
+                errors.append(f"{module_name}: {exc}")
                 continue
 
             app = getattr(module, "app", None)
@@ -25,24 +37,38 @@ class APITestCase(unittest.TestCase):
 
             factory = getattr(module, "create_app", None)
             if callable(factory):
-                return factory()
+                try:
+                    return factory()
+                except TypeError:
+                    pass
+                except Exception as exc:
+                    errors.append(f"{module_name}.create_app(): {exc}")
 
+        detail = "; ".join(errors)
         raise ImportError(
             "Could not find the Flask application. "
-            "Make sure run.py exposes `app`, or exposes a `create_app()` function."
+            "Make sure run.py exposes `app` or `create_app()`. "
+            + detail
         )
 
     @staticmethod
     def _load_db():
-        try:
-            extensions = importlib.import_module("app.extensions")
-            return getattr(extensions, "db", None)
-        except ImportError:
-            return None
+        for module_name in ("app.extensions", "app"):
+            try:
+                module = importlib.import_module(module_name)
+                db = getattr(module, "db", None)
+                if db is not None:
+                    return db
+            except Exception:
+                continue
+        return None
 
     def setUp(self):
-        self.app.config.update(TESTING=True)
+        self.app.config["TESTING"] = True
+
+        self.app.test_client_class = RedirectFollowingClient
         self.client = self.app.test_client()
+
         self.db = type(self).db
 
         self.sample_customers = None
@@ -53,20 +79,13 @@ class APITestCase(unittest.TestCase):
         self.sample_tickets_with_parts = None
         self.sample_tickets_with_mechanics = None
         self.sample_users = None
-        self.auth_token = None
+
         self.expired_token = "expired_token"
         self.auth_token_no_customer = "invalid_token"
 
-        if self.db is not None and self.app.config.get("TEST_RECREATE_DB", True):
-            try:
-                with self.app.app_context():
-                    self.db.session.remove()
-                    self.db.drop_all()
-                    self.db.create_all()
-            except Exception:
-                pass
         self.auth_token = self._login_for_token(
-            "user1@example.com", "password123"
+            "user1@example.com",
+            "password123",
         )
 
     def tearDown(self):
@@ -82,6 +101,7 @@ class APITestCase(unittest.TestCase):
             response = self.client.post(
                 "/users/login",
                 json={"email": email, "password": password},
+                follow_redirects=True,
             )
             if response.status_code == 200:
                 data = response.get_json(silent=True) or {}
