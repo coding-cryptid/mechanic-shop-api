@@ -3,7 +3,7 @@ import json
 from datetime import datetime, timedelta
 
 
-from unittest_base import APITestCase
+from unittest import APITestCase
 
 class TestServiceTicketsPost(APITestCase):
     # Tests for POST /service_tickets - Create service ticket

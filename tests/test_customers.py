@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 
 
-from unittest_base import APITestCase
+from unittest import APITestCase
 
 class TestCustomersPost(APITestCase):
     # Tests for POST /customers - Create customer
