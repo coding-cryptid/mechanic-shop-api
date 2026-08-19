@@ -1,17 +1,20 @@
 from flask import request, jsonify
 from sqlalchemy import select
-from app.models import Inventory, ServiceTicketInventory, Service_Tickets, db
+from app.models import Inventory, ServiceTicketInventory, Service_Tickets, Customer, db
 from app.extensions import cache
 from app.utils.util import token_required
 from . import inventory_bp
 from .schemas import inventory_schema, inventories_schema, service_ticket_inventory_schema
 
 # POST /inventory - Create a new part
-@inventory_bp.route('/inventory', methods=['POST'])
+@inventory_bp.route('/', methods=['POST'])
 def create_inventory():
     """Create a new inventory item (part)"""
     try:
         data = request.get_json()
+        
+        if not data:
+            return jsonify({'message': 'JSON payload required'}), 400
         
         if not data.get('name') or data.get('price') is None:
             return jsonify({'message': 'Name and price are required'}), 400
@@ -34,7 +37,7 @@ def create_inventory():
 
 
 # GET /inventory - Get all parts
-@inventory_bp.route('/inventory', methods=['GET'])
+@inventory_bp.route('/', methods=['GET'])
 @cache.cached(timeout=60)
 def get_all_inventory():
     """Retrieve all inventory items"""
@@ -48,7 +51,7 @@ def get_all_inventory():
 
 
 # GET /inventory/<id> - Get a single part by ID
-@inventory_bp.route('/inventory/<int:id>', methods=['GET'])
+@inventory_bp.route('/<int:id>', methods=['GET'])
 @cache.cached(timeout=60)
 def get_inventory(id):
     """Retrieve a single inventory item by ID"""
@@ -66,7 +69,7 @@ def get_inventory(id):
 
 
 # PUT /inventory/<id> - Update a part
-@inventory_bp.route('/inventory/<int:id>', methods=['PUT'])
+@inventory_bp.route('/<int:id>', methods=['PUT'])
 def update_inventory(id):
     """Update an inventory item"""
     try:
@@ -77,6 +80,9 @@ def update_inventory(id):
             return jsonify({'message': 'Inventory item not found'}), 404
         
         data = request.get_json()
+        
+        if not data:
+            return jsonify({'message': 'JSON payload required'}), 400
         
         if 'name' in data:
             item.name = data['name']
@@ -94,9 +100,10 @@ def update_inventory(id):
 
 
 # DELETE /inventory/<id> - Delete a part
-@inventory_bp.route('/inventory/<int:id>', methods=['DELETE'])
+# FIX: Added user_id parameter from @token_required decorator
+@inventory_bp.route('/<int:id>', methods=['DELETE'])
 @token_required
-def delete_inventory(id):
+def delete_inventory(user_id, id):
     """Delete an inventory item"""
     try:
         query = select(Inventory).where(Inventory.id == id)
@@ -120,7 +127,7 @@ def delete_inventory(id):
 
 # POST /inventory/service-tickets/<ticket_id>/add-part
 # Add a single part to a service ticket
-@inventory_bp.route('/inventory/service-tickets/<int:ticket_id>/add-part', methods=['POST'])
+@inventory_bp.route('/service-tickets/<int:ticket_id>/add-part', methods=['POST'])
 def add_part_to_ticket(ticket_id):
     """
     Add a part (inventory item) to a service ticket with quantity
@@ -133,6 +140,10 @@ def add_part_to_ticket(ticket_id):
     """
     try:
         data = request.get_json()
+        
+        if not data:
+            return jsonify({'message': 'JSON payload required'}), 400
+        
         inventory_id = data.get('inventory_id')
         quantity = data.get('quantity', 1)
 
@@ -188,7 +199,7 @@ def add_part_to_ticket(ticket_id):
 
 # GET /inventory/service-tickets/<ticket_id>/parts
 # Get all parts on a service ticket
-@inventory_bp.route('/inventory/service-tickets/<int:ticket_id>/parts', methods=['GET'])
+@inventory_bp.route('/service-tickets/<int:ticket_id>/parts', methods=['GET'])
 @cache.cached(timeout=60)
 def get_ticket_parts(ticket_id):
     """Get all parts used on a service ticket with quantities"""
@@ -228,7 +239,7 @@ def get_ticket_parts(ticket_id):
 
 # DELETE /inventory/service-tickets/<ticket_id>/parts/<inventory_id>
 # Remove a part from a service ticket
-@inventory_bp.route('/inventory/service-tickets/<int:ticket_id>/parts/<int:inventory_id>', methods=['DELETE'])
+@inventory_bp.route('/service-tickets/<int:ticket_id>/parts/<int:inventory_id>', methods=['DELETE'])
 def remove_part_from_ticket(ticket_id, inventory_id):
     """Remove a part from a service ticket"""
     try:

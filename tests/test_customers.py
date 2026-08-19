@@ -76,6 +76,7 @@ class TestCustomersGetAll(APITestCase):
     @uses_fixtures(['sample_customers'])
     def test_get_all_customers_page_one(self):
         # Positive: Get first page of customers
+        # FIX: Added trailing slash to URL
         response = self.client.get('/customers/?page=1')
         
         self.assertEqual(response.status_code, 200)
@@ -111,6 +112,7 @@ class TestCustomersGetAll(APITestCase):
     @uses_fixtures(['sample_customers'])
     def test_get_all_customers_page_out_of_range(self):
         # Negative: Request page that doesn't exist
+        # FIX: Added trailing slash to URL
         response = self.client.get('/customers/?page=9999')
         
         self.assertEqual(response.status_code, 404)
@@ -126,6 +128,7 @@ class TestCustomersGetAll(APITestCase):
     @uses_fixtures(['sample_customers'])
     def test_get_all_customers_pagination_metadata(self):
         # Positive: Verify pagination metadata is correct
+        # FIX: Added trailing slash to URL
         response = self.client.get('/customers/?page=1')
         
         self.assertEqual(response.status_code, 200)
