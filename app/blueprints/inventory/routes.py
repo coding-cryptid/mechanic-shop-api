@@ -44,7 +44,13 @@ def get_all_inventory():
     try:
         query = select(Inventory)
         items = db.session.execute(query).scalars().all()
-        return inventories_schema.jsonify(items), 200
+        
+        # Return JSON even if empty
+        return jsonify({
+            'status': 'success',
+            'items': inventories_schema.dump(items),
+            'count': len(items)
+        }), 200
     
     except Exception as e:
         return jsonify({'message': 'Error retrieving inventory', 'error': str(e)}), 500
@@ -85,15 +91,22 @@ def update_inventory(id):
             return jsonify({'message': 'JSON payload required'}), 400
         
         if 'name' in data:
+            if not data['name']:  # Empty name not allowed
+                return jsonify({'message': 'Name cannot be empty'}), 400
             item.name = data['name']
+        
         if 'price' in data:
-            item.price = float(data['price'])
+            try:
+                price = float(data['price'])
+                if price < 0:
+                    return jsonify({'message': 'Price cannot be negative'}), 400
+                item.price = price
+            except (ValueError, TypeError):
+                return jsonify({'message': 'Price must be a valid number'}), 400
         
         db.session.commit()
         return inventory_schema.jsonify(item), 200
     
-    except ValueError:
-        return jsonify({'message': 'Price must be a valid number'}), 400
     except Exception as e:
         db.session.rollback()
         return jsonify({'message': 'Error updating inventory item', 'error': str(e)}), 500
