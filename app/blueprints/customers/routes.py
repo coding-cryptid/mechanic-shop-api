@@ -108,14 +108,12 @@ def update_customer(id):
         if not data:
             return jsonify({'message': 'JSON payload required'}), 400
         
-        # Check for required fields
+        # Check all required fields
         required_fields = ['name', 'email', 'phone_number']
         missing = [f for f in required_fields if not data.get(f)]
         
         if missing:
-            return jsonify({
-                'message': f'Missing required fields: {", ".join(missing)}'
-            }), 400
+            return jsonify({'message': f'Missing required fields: {", ".join(missing)}'}), 400
         
         customer.name = data['name']
         customer.email = data['email']

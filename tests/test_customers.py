@@ -76,7 +76,7 @@ class TestCustomersGetAll(APITestCase):
     @uses_fixtures(['sample_customers'])
     def test_get_all_customers_page_one(self):
         # Positive: Get first page of customers
-        response = self.client.get('/customers?page=1')
+        response = self.client.get('/customers/?page=1')
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
@@ -96,7 +96,7 @@ class TestCustomersGetAll(APITestCase):
     
     def test_get_all_customers_invalid_page_zero(self):
         # Negative: Request page 0 (invalid)
-        response = self.client.get('/customers?page=0')
+        response = self.client.get('/customers/?page=0')
         
         self.assertEqual(response.status_code, 400)
         data = json.loads(response.data)
@@ -104,14 +104,14 @@ class TestCustomersGetAll(APITestCase):
     
     def test_get_all_customers_invalid_page_negative(self):
         # Negative: Request negative page number
-        response = self.client.get('/customers?page=-5')
+        response = self.client.get('/customers/?page=-5')
         
         self.assertEqual(response.status_code, 400)
     
     @uses_fixtures(['sample_customers'])
     def test_get_all_customers_page_out_of_range(self):
         # Negative: Request page that doesn't exist
-        response = self.client.get('/customers?page=9999')
+        response = self.client.get('/customers/?page=9999')
         
         self.assertEqual(response.status_code, 404)
         data = json.loads(response.data)
@@ -119,14 +119,14 @@ class TestCustomersGetAll(APITestCase):
     
     def test_get_all_customers_non_numeric_page(self):
         # Negative: Pass non-numeric page value
-        response = self.client.get('/customers?page=abc')
+        response = self.client.get('/customers/?page=abc')
 
         self.assertIn(response.status_code, [400, 404])
     
     @uses_fixtures(['sample_customers'])
     def test_get_all_customers_pagination_metadata(self):
         # Positive: Verify pagination metadata is correct
-        response = self.client.get('/customers?page=1')
+        response = self.client.get('/customers/?page=1')
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)

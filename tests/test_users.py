@@ -107,11 +107,8 @@ class TestUsersLogin(APITestCase):
     
     def test_login_invalid_json(self):
         # Negative: Login with invalid JSON
-        response = self.client.post(
-            '/users/login',
-            data='invalid json',
-            content_type='application/json'
-        )
+        response = self.client.post('/users/login', data='invalid json', content_type='application/json')
+        self.assertIn(response.status_code, [400, 415])
         
         self.assertEqual(response.status_code, 400)
         data = json.loads(response.data)
