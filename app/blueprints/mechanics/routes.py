@@ -11,24 +11,45 @@ from app.extensions import limiter, cache
 @mechanics_bp.route('/mechanics', methods=['POST'])
 @limiter.limit("6 per hour")
 def create_mechanic():
-    from flask import request, jsonify
-
-    data = request.get_json()
-    new_mechanic = Mechanics(
-        name=data['name'],
-        email=data['email'],
-        phone_number=data['phone_number'],
-        salary=data['salary']
-    )
-    db.session.add(new_mechanic)
-    db.session.commit()
-    return mechanic_schema.jsonify(new_mechanic), 201
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'message': 'JSON payload required'}), 400
+        
+        # Validate all required fields
+        required_fields = ['name', 'email', 'phone_number', 'salary']
+        missing = [f for f in required_fields if not data.get(f)]
+        
+        if missing:
+            return jsonify({
+                'message': f'Missing required fields: {", ".join(missing)}'
+            }), 400
+        
+        # Validate salary is numeric
+        try:
+            salary = int(data['salary'])
+        except (ValueError, TypeError):
+            return jsonify({'message': 'Salary must be a valid integer'}), 400
+        
+        new_mechanic = Mechanics(
+            name=data['name'],
+            email=data['email'],
+            phone_number=data['phone_number'],
+            salary=salary
+        )
+        db.session.add(new_mechanic)
+        db.session.commit()
+        return mechanic_schema.jsonify(new_mechanic), 201
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Error creating mechanic', 'error': str(e)}), 500
 
 # GET /mechanics
 @mechanics_bp.route('/mechanics', methods=['GET'])
 @cache.cached(timeout=60)
 def get_mechanics():
-    # mechanics = Mechanics.query.all()
     mechanics = db.session.execute(db.select(Mechanics)).scalars().all()
     return mechanics_schema.jsonify(mechanics), 200
 
@@ -36,24 +57,56 @@ def get_mechanics():
 @mechanics_bp.route('/mechanics/<int:id>', methods=['GET'])
 @cache.cached(timeout=60)
 def get_mechanic(id):
-    # mechanic = Mechanics.query.get_or_404(id)
-    mechanic = db.session.execute(db.select(Mechanics).where(Mechanics.id == id)).scalar_one_or_none()
-    return mechanic_schema.jsonify(mechanic), 200
+    try:
+        mechanic = db.session.execute(db.select(Mechanics).where(Mechanics.id == id)).scalar_one_or_none()
+        
+        if not mechanic:
+            return jsonify({'message': 'Mechanic not found'}), 404
+        
+        return mechanic_schema.jsonify(mechanic), 200
+    
+    except Exception as e:
+        return jsonify({'message': 'Error retrieving mechanic', 'error': str(e)}), 500
 
 # PUT /mechanics/<id>
 @mechanics_bp.route('/mechanics/<int:id>', methods=['PUT'])
 def update_mechanic(id):
-    from flask import request, jsonify
-
-    # mechanic = Mechanics.query.get_or_404(id)
-    mechanic = db.session.execute(db.select(Mechanics).where(Mechanics.id == id)).scalar_one_or_none()
-    data = request.get_json()
-    mechanic.name = data['name']
-    mechanic.email = data['email']
-    mechanic.phone_number = data['phone_number']
-    mechanic.salary = data['salary']
-    db.session.commit()
-    return mechanic_schema.jsonify(mechanic), 200
+    try:
+        mechanic = db.session.execute(db.select(Mechanics).where(Mechanics.id == id)).scalar_one_or_none()
+        
+        if not mechanic:
+            return jsonify({'message': 'Mechanic not found'}), 404
+        
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'message': 'JSON payload required'}), 400
+        
+        # Validate all required fields
+        required_fields = ['name', 'email', 'phone_number', 'salary']
+        missing = [f for f in required_fields if not data.get(f)]
+        
+        if missing:
+            return jsonify({
+                'message': f'Missing required fields: {", ".join(missing)}'
+            }), 400
+        
+        # Validate salary is numeric
+        try:
+            salary = int(data['salary'])
+        except (ValueError, TypeError):
+            return jsonify({'message': 'Salary must be a valid integer'}), 400
+        
+        mechanic.name = data['name']
+        mechanic.email = data['email']
+        mechanic.phone_number = data['phone_number']
+        mechanic.salary = salary
+        db.session.commit()
+        return mechanic_schema.jsonify(mechanic), 200
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Error updating mechanic', 'error': str(e)}), 500
 
 # GET /mechanics/leaderboard
 # Mechanics ranked by most tickets worked on
@@ -97,11 +150,21 @@ def get_mechanics_leaderboard():
         }), 500
 
 # DELETE /mechanics/<id>
+# FIX: Added user_id parameter from @token_required decorator
 @mechanics_bp.route('/mechanics/<int:id>', methods=['DELETE'])
 @token_required
 @limiter.limit("3 per hour")
-def delete_mechanic(id):
-    mechanic = Mechanics.query.get_or_404(id)
-    db.session.delete(mechanic)
-    db.session.commit()
-    return '', 204
+def delete_mechanic(user_id, id):
+    try:
+        mechanic = db.session.execute(db.select(Mechanics).where(Mechanics.id == id)).scalar_one_or_none()
+        
+        if not mechanic:
+            return jsonify({'message': 'Mechanic not found'}), 404
+        
+        db.session.delete(mechanic)
+        db.session.commit()
+        return '', 204
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Error deleting mechanic', 'error': str(e)}), 500
