@@ -17,8 +17,7 @@ def create_customer():
         
         if not data:
             return jsonify({'message': 'JSON payload required'}), 400
-        
-        # Check for required fields
+
         required_fields = ['name', 'email', 'phone_number']
         missing = [f for f in required_fields if not data.get(f)]
         
@@ -44,14 +43,6 @@ def create_customer():
 @customers_bp.route('/', methods=['GET'])
 @cache.cached(timeout=60)
 def get_customers():
-    """
-    Get all customers with pagination (20 per page)
-    
-    Query parameters:
-    - page: page number (default: 1)
-    
-    Example: GET /customers?page=1
-    """
     try:
         page = request.args.get('page', 1, type=int)
         
