@@ -12,17 +12,33 @@ CUSTOMERS_PER_PAGE = 20
 # POST /customers
 @customers_bp.route('/', methods=['POST'])
 def create_customer():
-    from flask import request, jsonify
-
-    data = request.get_json()
-    new_customer = Customer(
-        name=data['name'],
-        email=data['email'],
-        phone_number=data['phone_number']
-    )
-    db.session.add(new_customer)
-    db.session.commit()
-    return customer_schema.jsonify(new_customer), 201
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'message': 'JSON payload required'}), 400
+        
+        # Check for required fields
+        required_fields = ['name', 'email', 'phone_number']
+        missing = [f for f in required_fields if not data.get(f)]
+        
+        if missing:
+            return jsonify({
+                'message': f'Missing required fields: {", ".join(missing)}'
+            }), 400
+        
+        new_customer = Customer(
+            name=data['name'],
+            email=data['email'],
+            phone_number=data['phone_number']
+        )
+        db.session.add(new_customer)
+        db.session.commit()
+        return customer_schema.jsonify(new_customer), 201
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Error creating customer', 'error': str(e)}), 500
 
 # GET /customers w/ Pagination
 @customers_bp.route('/', methods=['GET'])
@@ -76,29 +92,64 @@ def get_customers():
 @customers_bp.route('/<int:id>', methods=['GET'])
 @cache.cached(timeout=60)
 def get_customer(id):
-    # customer = Customer.query.get_or_404(id)
-    customer = db.session.execute(db.select(Customer).where(Customer.id == id)).scalar_one_or_none()
-    return customer_schema.jsonify(customer), 200
+    try:
+        customer = db.session.execute(db.select(Customer).where(Customer.id == id)).scalar_one_or_none()
+        
+        if not customer:
+            return jsonify({'message': 'Customer not found'}), 404
+        
+        return customer_schema.jsonify(customer), 200
+    
+    except Exception as e:
+        return jsonify({'message': 'Error retrieving customer', 'error': str(e)}), 500
 
 # PUT /customers/<id>
 @customers_bp.route('/<int:id>', methods=['PUT'])
 def update_customer(id):
-    from flask import request, jsonify
-
-    # customer = Customer.query.get_or_404(id)
-    customer = db.session.execute(db.select(Customer).where(Customer.id == id)).scalar_one_or_none()
-    data = request.get_json()
-    customer.name = data['name']
-    customer.email = data['email']
-    customer.phone_number = data['phone_number']
-    db.session.commit()
-    return customer_schema.jsonify(customer), 200
+    try:
+        customer = db.session.execute(db.select(Customer).where(Customer.id == id)).scalar_one_or_none()
+        
+        if not customer:
+            return jsonify({'message': 'Customer not found'}), 404
+        
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'message': 'JSON payload required'}), 400
+        
+        # Check for required fields
+        required_fields = ['name', 'email', 'phone_number']
+        missing = [f for f in required_fields if not data.get(f)]
+        
+        if missing:
+            return jsonify({
+                'message': f'Missing required fields: {", ".join(missing)}'
+            }), 400
+        
+        customer.name = data['name']
+        customer.email = data['email']
+        customer.phone_number = data['phone_number']
+        db.session.commit()
+        return customer_schema.jsonify(customer), 200
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Error updating customer', 'error': str(e)}), 500
 
 # DELETE /customers/<id>
 @customers_bp.route('/<int:id>', methods=['DELETE'])
 @token_required
-def delete_customer(id):
-    customer = db.session.execute(db.select(Customer).where(Customer.id == id)).scalar_one_or_none()
-    db.session.delete(customer)
-    db.session.commit()
-    return '', 204
+def delete_customer(user_id, id):
+    try:
+        customer = db.session.execute(db.select(Customer).where(Customer.id == id)).scalar_one_or_none()
+        
+        if not customer:
+            return jsonify({'message': 'Customer not found'}), 404
+        
+        db.session.delete(customer)
+        db.session.commit()
+        return '', 204
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Error deleting customer', 'error': str(e)}), 500
