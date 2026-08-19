@@ -228,21 +228,24 @@ def get_ticket_parts(ticket_id):
 
 # DELETE /inventory/service-tickets/<ticket_id>/parts/<inventory_id>
 # Remove a part from a service ticket
-@inventory_bp.route('/inventory/<int:id>', methods=['DELETE'])
-@token_required
-def delete_inventory(user_id, id):
+@inventory_bp.route('/inventory/service-tickets/<int:ticket_id>/parts/<int:inventory_id>', methods=['DELETE'])
+def remove_part_from_ticket(ticket_id, inventory_id):
+    """Remove a part from a service ticket"""
     try:
-        query = select(Inventory).where(Inventory.id == id)
-        item = db.session.execute(query).scalar_one_or_none()
+        query = select(ServiceTicketInventory).where(
+            (ServiceTicketInventory.service_ticket_id == ticket_id) &
+            (ServiceTicketInventory.inventory_id == inventory_id)
+        )
+        link = db.session.execute(query).scalar_one_or_none()
         
-        if not item:
-            return jsonify({'message': 'Inventory item not found'}), 404
+        if not link:
+            return jsonify({'message': 'Part not found on this ticket'}), 404
         
-        db.session.delete(item)
+        db.session.delete(link)
         db.session.commit()
         
-        return jsonify({'message': 'Inventory item deleted successfully'}), 200
+        return jsonify({'message': f'Part removed from ticket #{ticket_id}'}), 200
     
     except Exception as e:
         db.session.rollback()
-        return jsonify({'message': 'Error deleting inventory item', 'error': str(e)}), 500
+        return jsonify({'message': 'Error removing part from ticket', 'error': str(e)}), 500
