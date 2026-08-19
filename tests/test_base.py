@@ -196,12 +196,12 @@ class APITestCase(unittest.TestCase):
             Users(
                 name="Test User",
                 email="user1@example.com",
-                password=generate_password_hash("password123"),
+                password=generate_password_hash("password123", method='pbkdf2:sha256'),
             ),
             Users(
                 name="No Customer User",
                 email="nocustomer@example.com",
-                password=generate_password_hash("password123"),
+                password=generate_password_hash("password123", method='pbkdf2:sha256'),
             ),
         ]
         self.db.session.add_all(users)
