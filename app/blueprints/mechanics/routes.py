@@ -16,8 +16,7 @@ def create_mechanic():
         
         if not data:
             return jsonify({'message': 'JSON payload required'}), 400
-        
-        # Validate all required fields
+
         required_fields = ['name', 'email', 'phone_number', 'salary']
         missing = [f for f in required_fields if not data.get(f)]
         
@@ -25,8 +24,7 @@ def create_mechanic():
             return jsonify({
                 'message': f'Missing required fields: {", ".join(missing)}'
             }), 400
-        
-        # Validate salary is numeric
+
         try:
             salary = int(data['salary'])
         except (ValueError, TypeError):
@@ -81,8 +79,7 @@ def update_mechanic(id):
         
         if not data:
             return jsonify({'message': 'JSON payload required'}), 400
-        
-        # Validate all required fields
+
         required_fields = ['name', 'email', 'phone_number', 'salary']
         missing = [f for f in required_fields if not data.get(f)]
         
@@ -90,8 +87,7 @@ def update_mechanic(id):
             return jsonify({
                 'message': f'Missing required fields: {", ".join(missing)}'
             }), 400
-        
-        # Validate salary is numeric
+
         try:
             salary = int(data['salary'])
         except (ValueError, TypeError):
@@ -113,10 +109,6 @@ def update_mechanic(id):
 @mechanics_bp.route('/mechanics/leaderboard', methods=['GET'])
 @cache.cached(timeout=300)
 def get_mechanics_leaderboard():
-    """
-    Get all mechanics ranked by number of tickets they've worked on
-    Returns mechanics in descending order (most tickets first)
-    """
     try:
         query = select(
             Mechanics,
