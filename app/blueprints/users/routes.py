@@ -126,3 +126,20 @@ def get_my_tickets(user_id):
             "message": "Error retrieving tickets",
             "error": str(e)
         }), 500
+
+@users_bp.route('/', methods=['DELETE'])
+@token_required
+def delete_user(user_id):
+    user = db.session.execute(
+        select(Users).where(Users.id == user_id)
+    ).scalar_one_or_none()
+
+    if not user:
+        return jsonify({
+            "message": "User not found"
+        }), 404
+
+    db.session.delete(user)
+    db.session.commit()
+
+    return '', 204
