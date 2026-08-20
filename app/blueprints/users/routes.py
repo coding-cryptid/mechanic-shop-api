@@ -1,11 +1,12 @@
 from flask import request, jsonify
 from sqlalchemy import select
 from werkzeug.security import check_password_hash
+from marshmallow import ValidationError
 from app.models import Users, Customer, Service_Tickets, db
 from app.utils.util import encode_token, token_required
+from app.blueprints.service_tickets.schemas import service_tickets_schema
 from . import users_bp
-from .schemas import user_schema, service_tickets_schema
-from marshmallow import ValidationError
+from .schemas import user_schema
 
 
 @users_bp.route('/login', methods=['POST'])
