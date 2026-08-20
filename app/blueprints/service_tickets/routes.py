@@ -1,7 +1,7 @@
 from datetime import datetime
 from flask import request, jsonify
 from sqlalchemy import select
-from app.models import Service_Tickets, Mechanics, db
+from app.models import Service_Tickets, Mechanics, db, Customer
 from .schemas import service_tickets_schema, service_ticket_schema
 from . import service_tickets_bp
 from app.extensions import cache
@@ -44,12 +44,28 @@ def parse_service_date(date_string):
 @service_tickets_bp.route('/service_tickets', methods=['POST'])
 def create_service_ticket():
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
 
         if not data:
             return jsonify({
                 'message': 'JSON payload required'
             }), 400
+
+        if not data:
+            return jsonify({
+                'message': 'JSON payload required'
+            }), 400
+
+        customer = db.session.execute(
+            select(Customer).where(
+                Customer.id == data['customer_id']
+            )
+        ).scalar_one_or_none()
+
+        if not customer:
+            return jsonify({
+                'message': 'Customer not found'
+            }), 404
 
         required_fields = [
             'customer_id',
@@ -186,7 +202,12 @@ def update_service_ticket(id):
                 'message': 'Service ticket not found'
             }), 404
 
-        data = request.get_json()
+        data = request.get_json(silent=True)
+
+        if not data:
+            return jsonify({
+                'message': 'JSON payload required'
+            }), 400
 
         if not data:
             return jsonify({
@@ -267,7 +288,12 @@ def edit_ticket_mechanics(ticket_id):
     """
 
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
+
+        if not data:
+            return jsonify({
+                'message': 'JSON payload required'
+            }), 400
 
         if not data:
             return jsonify({
