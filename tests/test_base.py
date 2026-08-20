@@ -59,6 +59,7 @@ class APITestCase(unittest.TestCase):
                 "sample_tickets_with_parts",
             }:
                 requested.add("sample_inventory")
+                requested.add("sample_tickets")
 
             if requested & {
                 "sample_tickets_with_mechanics",

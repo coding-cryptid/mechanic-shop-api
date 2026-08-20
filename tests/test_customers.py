@@ -187,17 +187,17 @@ class TestCustomersPut(APITestCase):
     def test_update_customer_success(self):
         # Positive: Update existing customer
         payload = {
-            'name': 'Jane Doe',
-            'email': 'jane@example.com',
-            'phone_number': '555-5678'
+            'name': 'John Updated',
+            'email': 'john.updated@example.com',  # Unique!
+            'phone_number': '555-9999'
         }
         response = self.client.put('/customers/1', json=payload)
         
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
-        self.assertEqual(data['name'], 'Jane Doe')
-        self.assertEqual(data['email'], 'jane@example.com')
-        self.assertEqual(data['phone_number'], '555-5678')
+        self.assertEqual(data['name'], 'John Updated')
+        self.assertEqual(data['email'], 'john.updated@example.com')
+        self.assertEqual(data['phone_number'], '555-9999')
     
     def test_update_customer_nonexistent_id(self):
         # Negative: Update non-existent customer

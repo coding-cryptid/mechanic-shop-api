@@ -1,6 +1,6 @@
 from flask import request, jsonify
 from sqlalchemy import select
-
+from sqlalchemy.exc import IntegrityError
 from app.models import Customer, db
 from app.utils.util import token_required
 
@@ -56,11 +56,21 @@ def create_customer():
 
         return customer_schema.jsonify(new_customer), 201
 
+    except IntegrityError as e:
+        db.session.rollback()
+        if 'email' in str(e):
+            return jsonify({
+                'message': 'Email already exists'
+            }), 409
+        return jsonify({
+            'message': 'Error updating customer',
+            'error': str(e)
+        }), 400
+    
     except Exception as e:
         db.session.rollback()
-
         return jsonify({
-            'message': 'Error creating customer',
+            'message': 'Error updating customer',
             'error': str(e)
         }), 500
 
@@ -245,8 +255,23 @@ def update_customer(id):
             customer
         ), 200
 
+    except IntegrityError as e:
+        db.session.rollback()
+        if 'email' in str(e):
+            return jsonify({
+                'message': 'Email already exists'
+            }), 409
+        return jsonify({
+            'message': 'Error updating customer',
+            'error': str(e)
+        }), 400
+    
     except Exception as e:
         db.session.rollback()
+        return jsonify({
+            'message': 'Error updating customer',
+            'error': str(e)
+        }), 500
 
         # Keep this temporarily.
         # If the test still returns 500, this tells us exactly why.

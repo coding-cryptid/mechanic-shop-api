@@ -21,7 +21,7 @@ def login():
     }
     """
     try:
-        credentials = request.get_json()
+        credentials = request.get_json(silent=True)
 
         # ✅ FIX: Check for empty JSON before processing
         if not credentials:
@@ -104,7 +104,7 @@ def get_my_tickets(user_id):
         
         if not customer:
             return jsonify({
-                "message": "No customer account found for this user",
+                "message": "Customer account not found for this user",
                 "tickets": []
             }), 404
         

@@ -56,17 +56,6 @@ def create_service_ticket():
                 'message': 'JSON payload required'
             }), 400
 
-        customer = db.session.execute(
-            select(Customer).where(
-                Customer.id == data['customer_id']
-            )
-        ).scalar_one_or_none()
-
-        if not customer:
-            return jsonify({
-                'message': 'Customer not found'
-            }), 404
-
         required_fields = [
             'customer_id',
             'vin',
@@ -84,6 +73,17 @@ def create_service_ticket():
                 'message': 'Missing required fields',
                 'fields': missing_fields
             }), 400
+
+        customer = db.session.execute(
+            select(Customer).where(
+                    Customer.id == data['customer_id']
+                )
+            ).scalar_one_or_none()
+        
+        if not customer:
+            return jsonify({
+                'message': 'Customer not found'
+            }), 404
 
         service_date = parse_service_date(
             data['service_date']
