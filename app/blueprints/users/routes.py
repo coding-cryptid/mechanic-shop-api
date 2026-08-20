@@ -1,10 +1,10 @@
 from flask import request, jsonify
 from sqlalchemy import select
 from werkzeug.security import check_password_hash
-from app.models import Users, Customer, db
-from app.utils.util import encode_token
+from app.models import Users, Customer, Service_Tickets, db
+from app.utils.util import encode_token, token_required
 from . import users_bp
-from .schemas import user_schema
+from .schemas import user_schema, service_tickets_schema
 from marshmallow import ValidationError
 
 
@@ -57,7 +57,7 @@ def login():
         return jsonify({
             "status": "success",
             "message": "Login successful",
-            "token": token,
+            "auth_token": token,
             "user": {
                 "id": user.id,
                 "name": user.name,
@@ -79,32 +79,15 @@ def login():
 
 
 @users_bp.route('/my-tickets', methods=['GET'])
-def get_my_tickets():
+@token_required
+def get_my_tickets(user_id):
     """
     Get all service tickets for the authenticated user
     Requires valid JWT token in Authorization header
+    
+    Returns tickets for the customer account associated with the user's email
     """
     try:
-        auth_header = request.headers.get('Authorization')
-        
-        if not auth_header:
-            return jsonify({"message": "Missing Authorization header"}), 401
-        
-        parts = auth_header.split()
-        
-        if len(parts) != 2 or parts[0] != 'Bearer':
-            return jsonify({"message": "Invalid Authorization header format"}), 401
-        
-        token = parts[1]
-        
-        # Decode token to get user_id
-        from app.utils.util import decode_token
-        
-        try:
-            user_id = decode_token(token)
-        except Exception:
-            return jsonify({"message": "Invalid or expired token"}), 401
-        
         # Get user
         user = db.session.execute(
             select(Users).where(Users.id == user_id)
@@ -120,14 +103,11 @@ def get_my_tickets():
         
         if not customer:
             return jsonify({
-                "message": "No customer found for this user",
+                "message": "No customer account found for this user",
                 "tickets": []
-            }), 200
+            }), 404
         
         # Get all tickets for this customer
-        from app.models import Service_Tickets
-        from .schemas import service_tickets_schema
-        
         tickets = db.session.execute(
             select(Service_Tickets).where(Service_Tickets.customer_id == customer.id)
         ).scalars().all()
