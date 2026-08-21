@@ -4,9 +4,9 @@ info:
   title: Mechanic Shop API
   version: 1.0.0
   description: Complete REST API for managing a mechanic shop system with customer management, mechanics, service tickets, and inventory.
-host: "127.0.0.1:5000"
+host: "https://mechanic-shop-api-4kzx.onrender.com/"
 schemes:
-  - "http"
+  - "https"
 consumes:
   - "application/json"
 produces:
