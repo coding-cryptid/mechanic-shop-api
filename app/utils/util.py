@@ -1,10 +1,11 @@
 from functools import wraps
+import os
 from datetime import datetime, timedelta
 from flask import request, jsonify
 from jose import jwt, exceptions as jose_exceptions
 
 
-SECRET_KEY = "a super secret, secret key"
+SECRET_KEY = os.environ.get('SECRET_KEY') or "super secret secrets"
 ALGORITHM = "HS256"
 
 
